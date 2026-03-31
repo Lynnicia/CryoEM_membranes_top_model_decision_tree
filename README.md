@@ -1,5 +1,7 @@
-# CryoEM_ultrastructures_top_model_decision_tree
-Multiple model architectures can be used to segment bacterial ultrastructures in cryoEM images. Here, we present an Automated Model Decision Tree that can be used to track and identify the top segmentation model used to generate bacterial inner and outer membrane masks based on parameters of interest. We use pre-trained segmentation models from YOLOv11, YOLO26, U-Net, Detectron2 and SAM3 fine-tuned on bacterial inner and outer membranes imaged with cryoEM. 
+# CryoEM_membranes_top_model_decision_tree
+This 
+
+Multiple model architectures can be used to segment bacterial membranes in cryoEM images. A novel AI-based tool advancement is often presented with only a single segmentation model for broad use. This single model may show inconsistent results Here, we present the Top Model Decision Tree that can be used to screen for the best model to generate bacterial inner and outer membrane masks based on usre priorities. We use pre-trained segmentation models from YOLOv11, YOLO26, U-Net, Detectron2 and SAM3 fine-tuned on bacterial inner and outer membranes imaged with cryoEM. 
 
 
 <div align="center">
