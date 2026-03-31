@@ -1,6 +1,6 @@
 # CryoEM_membranes_top_model_decision_tree
 ### Overview
-This repository hosts a model screening framework for Pantoea sp. YR343 low dose and ultralow dose cryo-electron microscopy (cryoEM) datasets. This workflow
+This repository hosts a model screening framework for *Pantoea* sp. YR343 low dose and ultralow dose cryo-electron microscopy (cryoEM) datasets. This workflow
 
 <div align="center">
 <img width="569" height="408" alt="image" src="https://github.com/user-attachments/assets/e64ff81f-c265-487c-ad3b-95ea3f7cdd05" />
@@ -15,9 +15,15 @@ Multiple model architectures can be used to segment bacterial membranes in cryoE
 ##### 3. 
 
 ### Repository Contents
-##### 1. 
-##### 2. 
-##### 3. 
+##### Datasets 
+The low dose and ultralow dose test images of *Pantoea* sp. YR343 and annotations are located within this folder in both COCO and YOLO formats. The images have also be resized to 640 x 640 and 1024 x 1024. Please use the exact folder format, `_annotations.json` text and annotation class order of 0 = inner membrane (IM) and 1 = outer membrane (OM) for replacing these datasets with your own dataset.  
+##### Drop
+##### Misc
+##### Seed
+##### Root
+##### top_model_decision_tree.ipynb
+##### top_model_table.csv
+
 
 ### Run the Framework
 1. 
