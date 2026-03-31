@@ -10,27 +10,34 @@ This repository hosts a model screening framework for *Pantoea* sp. YR343 low do
 Multiple deep learning model architectures can be used to segment bacterial membranes in cryoEM images. However, an AI-based tool advancement is often presented with only a single segmentation model for broad use, and this single model may show inconsistent results across datasets from different users. Here, we present the Top Model Decision Tree, a model screening framwework to screen for the best model to generate bacterial inner and outer membrane masks based on user priorities. We use pre-trained segmentation models from YOLOv11, YOLO26, U-Net, Detectron2 and SAM3 fine-tuned on bacterial inner and outer membranes imaged with cryoEM. 
 
 ### Framework Workflow
-#### 1. 
-#### 2. 
-#### 3. 
+#### 1. What model and test image is needed?
+Load in your top model checkpoints and architecture. Next, load in test images. 
+#### 2. What mask count is needed?
+Prepare a manual count of bacteria in your test images. We used 15 images to manually count a total of 20 bacteria. Around 10-20 images can be used for a manual count with a custom dataset. This will output predicted masks and mask counts for the test images. Refer to https://github.com/Sireesiru/Cryo-TEM-Ultrastructures for the notebook and instructions to use the Bacterial Cell Envelope Thickness Tool.
+#### 3. What classes are needed? 
+This will output metrics for the class of interest. This has been hard-coded to output All classes (averaged OM and IM metrics), OM class and IM class. 
 
 ### Repository Contents
 #### Datasets 
-The low dose and ultralow dose test images of *Pantoea* sp. YR343 and annotations are located within this folder in both COCO and YOLO formats (Roboflow). The images have also be resized to 640 x 640 and 1024 x 1024. Please use the exact folder format, `_annotations.coco.json` text and annotation class order of 0 = inner membrane (IM) and 1 = outer membrane (OM) for replacing these datasets with your own dataset.  
+The low dose and ultralow dose test images of *Pantoea* sp. YR343 and annotations are located within this folder in both COCO and YOLO formats (Roboflow). The images have also be resized to 640 x 640 and 1024 x 1024. Please use the exact folder format, `_annotations.coco.json` text and annotation class order of 0 = inner membrane (IM) and 1 = outer membrane (OM) for replacing these datasets with a custom dataset.  
 #### Drop
-Test image python code is located in this folder. Be sure to update the dataset links for your own dataset. 
+Test image python code is located in this folder. Be sure to update the dataset links for a custom dataset. 
 #### Misc
-Placeholder python code to load in all model checkpoints. Example YOLOv11, YOLO26, Detectron2 and SAM3 segmentation model training steps. Please use your own data and Hugging Face token where applicable as these training steps are for demonstrative purposes only. For U-Net, Refer to https://github.com/Sireesiru/Semantic-Segmentation-of-bacterial-cell-envelope-using-U-Nets to be forked to a more in-depth example of U-Net segmentation model training steps.
+Placeholder python code to load in all model checkpoints. Example YOLOv11, YOLO26, Detectron2 and SAM3 segmentation model training steps. Please use your own data and Hugging Face token where applicable as these training steps are for demonstrative purposes only. For U-Net, Refer to https://github.com/Sireesiru/Semantic-Segmentation-of-bacterial-cell-envelope-using-U-Nets to be forked to a more in-depth example of U-Net segmentation model training steps. Refer to https://github.com/Sireesiru/Cryo-TEM-Ultrastructures for steps on how to train on a custom dataset, check README.md.
 #### Seed
 Python code for top models and model architectures. 
 #### |  Models
 All best model checkpoints are located in this subfolder. A placeholder has been added for models too large to add to this repository. Please run the placeholder routine in the misc folder to load in all best model chekpoints. 
 #### Root
 Mask and metrics screening python code. 
+#### Top
+Python code to sort top_model_table.csv and output a subset table. 
 #### top_model_decision_tree.ipynb
-Main Notebook to run the Top Model Decision Tree. This notebook is only copatible with Google Colab. Open this notebook in Google Colab and git clone the remaining folder components to use the framework.
+Main Notebook to run the Top Model Decision Tree. This notebook is only compatible with Google Colab. Open this notebook in Google Colab and git clone the remaining folder components to use the framework.
 #### top_model_table.csv
 Example .csv output from the Top Model Decision Tree.  
 
 ### Run the Framework
-1. 
+1. This notebook must be opened in Google Colab.  Mount Google Drive and run with a GPU-based runtime. 
+2. Open the notebook and follow steps to git clone in folders and files within this repository. There will be a repeating top_model_decision_tree.ipynb (notebook clone) that will not be used.
+3. Save your csv table outputs within your Google Drive or download before closing the notebook. 
