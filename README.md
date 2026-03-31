@@ -23,11 +23,11 @@ The low dose and ultralow dose test images of *Pantoea* sp. YR343 and annotation
 #### Drop
 Test image python code is located in this folder. Be sure to update the dataset links for a custom dataset. 
 #### Misc
-Placeholder python code to load in all model checkpoints. Example YOLOv11, YOLO26, Detectron2 and SAM3 segmentation model training steps. Please use your own data and Hugging Face token where applicable as these training steps are for demonstrative purposes only. For U-Net, Refer to https://github.com/Sireesiru/Semantic-Segmentation-of-bacterial-cell-envelope-using-U-Nets to be forked to a more in-depth example of U-Net segmentation model training steps. Refer to https://github.com/Sireesiru/Cryo-TEM-Ultrastructures for steps on how to train on a custom dataset, check README.md.
+Example YOLOv11, YOLO26, Detectron2 and SAM3 segmentation model training steps. Please use your own data and Hugging Face token where applicable as these training steps are for demonstrative purposes only. For U-Net, Refer to https://github.com/Sireesiru/Semantic-Segmentation-of-bacterial-cell-envelope-using-U-Nets to be forked to a more in-depth example of U-Net segmentation model training steps. Refer to https://github.com/Sireesiru/Cryo-TEM-Ultrastructures for steps on how to train on a custom dataset, check README.md.
 #### Seed
 Python code for top models and model architectures. 
 #### |  Models
-All best model checkpoints are located in this subfolder. A placeholder has been added for models too large to add to this repository. Please run the placeholder routine in the misc folder to load in all best model chekpoints. 
+All best model checkpoints are located in this subfolder. Placeholder python code to load in all model checkpoints. A placeholder has been added for models too large to add to this repository. Please run the placeholder routine in the misc folder to load in all best model chekpoints. 
 #### Root
 Mask and metrics screening python code. 
 #### Top
