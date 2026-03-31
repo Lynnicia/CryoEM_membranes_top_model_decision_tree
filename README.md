@@ -10,26 +10,26 @@ This repository hosts a model screening framework for *Pantoea* sp. YR343 low do
 Multiple deep learning model architectures can be used to segment bacterial membranes in cryoEM images. However, an AI-based tool advancement is often presented with only a single segmentation model for broad use, and this single model may show inconsistent results across datasets from different users. Here, we present the Top Model Decision Tree, a model screening framwework to screen for the best model to generate bacterial inner and outer membrane masks based on user priorities. We use pre-trained segmentation models from YOLOv11, YOLO26, U-Net, Detectron2 and SAM3 fine-tuned on bacterial inner and outer membranes imaged with cryoEM. 
 
 ### Framework Workflow
-##### 1. 
-##### 2. 
-##### 3. 
+#### 1. 
+#### 2. 
+#### 3. 
 
 ### Repository Contents
-##### Datasets 
+#### Datasets 
 The low dose and ultralow dose test images of *Pantoea* sp. YR343 and annotations are located within this folder in both COCO and YOLO formats (Roboflow). The images have also be resized to 640 x 640 and 1024 x 1024. Please use the exact folder format, `_annotations.coco.json` text and annotation class order of 0 = inner membrane (IM) and 1 = outer membrane (OM) for replacing these datasets with your own dataset.  
-##### Drop
+#### Drop
 Test image python code is located in this folder. Be sure to update the dataset links for your own dataset. 
-##### Misc
+#### Misc
 Placeholder python code to load in all model checkpoints. Example YOLOv11, YOLO26, Detectron2 and SAM3 segmentation model training steps. Please use your own data and Hugging Face token where applicable as these training steps are for demonstrative purposes only. For U-Net, Refer to https://github.com/Sireesiru/Semantic-Segmentation-of-bacterial-cell-envelope-using-U-Nets to be forked to a more in-depth example of U-Net segmentation model training steps.
-##### Seed
+#### Seed
 Python code for top models and model architectures. 
-##### |  Models
+#### |  Models
 All best model checkpoints are located in this subfolder. A placeholder has been added for models too large to add to this repository. Please run the placeholder routine in the misc folder to load in all best model chekpoints. 
-##### Root
+#### Root
 Mask and metrics screening python code. 
-##### top_model_decision_tree.ipynb
+#### top_model_decision_tree.ipynb
 Main Notebook to run the Top Model Decision Tree. This notebook is only copatible with Google Colab. Open this notebook in Google Colab and git clone the remaining folder components to use the framework.
-##### top_model_table.csv
+#### top_model_table.csv
 Example .csv output from the Top Model Decision Tree.  
 
 ### Run the Framework
