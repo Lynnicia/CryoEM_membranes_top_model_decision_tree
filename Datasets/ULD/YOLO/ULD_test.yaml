@@ -1,0 +1,14 @@
+
+train: ../train/images
+val: ../test/images # dummy path, YOLO will not run without this slot occupied even though <split = "test">
+test: ../test/images # unbiased test validation path, 15 images
+
+nc: 2
+names: ['IM', 'OM']
+
+roboflow:
+  workspace: bacterial-segmentation
+  project: ultra_low_dose_bacteria_thick_v2-kmmim
+  version: 11
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/bacterial-segmentation/ultra_low_dose_bacteria_thick_v2-kmmim/dataset/11
