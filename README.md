@@ -3,5 +3,5 @@ Multiple model architectures can be used to segment bacterial ultrastructures in
 
 
 <div align="center">
-  <img width="569" height="407" src="https://github.com/user-attachments/assets/c7e84a6e-7509-491d-a90d-8ea97775ed74" />
+<img width="569" height="408" alt="image" src="https://github.com/user-attachments/assets/e64ff81f-c265-487c-ad3b-95ea3f7cdd05" />
 </div>
