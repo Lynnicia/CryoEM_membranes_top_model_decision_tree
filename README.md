@@ -19,7 +19,7 @@ This will output metrics for the class of interest. This has been hard-coded to 
 
 ### Repository Contents
 #### Datasets 
-The low dose and ultralow dose test images of *Pantoea* sp. YR343 and annotations are located within this folder in both COCO and YOLO formats (Roboflow). The images have also be resized to 640 x 640 and 1024 x 1024. Please use the exact folder format, `_annotations.coco.json` text and annotation class order of 0 = inner membrane (IM) and 1 = outer membrane (OM) for replacing these datasets with a custom dataset.  
+The low dose and ultralow dose test images of *Pantoea* sp. YR343 and annotations are located within this folder in both COCO and YOLO formats (Roboflow). The images have also been resized to 640 x 640 and 1024 x 1024. When loading in custom datasets, please use the exact folder format, `_annotations.coco.json` text and annotation class order of 0 = inner membrane (IM) and 1 = outer membrane (OM). In addition, please resize your images to either 640 x 640 or 1024 x 1024 before proceeding. 
 #### Drop
 Test image python code is located in this folder. Be sure to update the dataset links for a custom dataset. 
 #### Misc
