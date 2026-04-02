@@ -1,4 +1,4 @@
-# CryoEM Membranes: Top Model Decision Tree
+# Top Model Decision Tree: CryoEM Bacterial Membranes
 ### Overview
 This repository hosts a model screening framework for *Pantoea* sp. YR343 low dose and ultralow dose cryo-electron microscopy (cryoEM) datasets. This framework can be used to screen for the top models that output segmentation masks used in AI-based tool pipelines. We have chosen the Bacterial Cell Envelope Tool hosted at https://github.com/Sireesiru/Cryo-TEM-Ultrastructures in Membrane_Thickness_Tool.ipynb as a representative AI-based tool. This workflow streamlines for model selection process to target tool compatibility and tool scalability across cryoEM imaging conditions. 
 
@@ -41,3 +41,6 @@ Example .csv output from the Top Model Decision Tree.
 1. This notebook must be opened in Google Colab.  Mount Google Drive and run with a GPU-based runtime. 
 2. Open the notebook and follow steps to git clone in folders and files within this repository. There will be a repeating top_model_decision_tree.ipynb (notebook clone) that will not be used.
 3. Save your csv table outputs within your Google Drive or download before closing the notebook. 
+
+# Future Outlook
+This framework presented in this GitHub is not limited to only bacterial membrane segmentation. Please feel free to restructure the model architectures to adapt to your fine-tuned pre-trained model checkpoints to custom datasets. 
