@@ -42,5 +42,5 @@ Example .csv output from the Top Model Decision Tree.
 2. Open the notebook and follow steps to git clone in folders and files within this repository. There will be a repeating top_model_decision_tree.ipynb (notebook clone) that will not be used.
 3. Save your csv table outputs within your Google Drive or download before closing the notebook. 
 
-# Future Outlook
+## Future Outlook
 This framework presented in this GitHub is not limited to only bacterial membrane segmentation. Please feel free to restructure the model architectures to adapt to your fine-tuned pre-trained model checkpoints to custom datasets. 
