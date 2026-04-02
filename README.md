@@ -27,7 +27,7 @@ Example YOLOv11, YOLO26, Detectron2 and SAM3 segmentation model training steps. 
 #### Seed
 Python code for top models and model architectures. 
 #### |  Models
-All best model checkpoints are located in this subfolder. Placeholder python code to load in all model checkpoints. A placeholder has been added for models too large to add to this repository. Please run the placeholder routine in the misc folder to load in all best model chekpoints. 
+All best model checkpoints are located in this subfolder. Placeholder python code to load in all model checkpoints. A placeholder has been added for models too large to add to this repository. Please run the placeholder routine in the misc folder to load in all best model chekpoints. All models will be either loaded from the GitHub releases (YOLOv11, YOLO26, U-Net and Detectron2) or from Hugging Face (SAM3). 
 #### Root
 Mask and metrics screening python code. 
 #### Top
