@@ -15,11 +15,11 @@ This repository hosts a model screening framework for *Pantoea* sp. YR343 low do
 3. Save your csv table outputs within your Google Drive or download before closing the notebook. 
 
 ### Framework Workflow
-#### 1. What model and test image is needed?
+#### 1. Select mode for electron dose and test images
 Load in your top model checkpoints and architecture. Next, load in test images. 
-#### 2. What mask count is needed?
+#### 2. WSelect mask count
 Prepare a manual count of bacteria in your test images. We used 15 images to manually count a total of 20 bacteria. Around 10-20 images can be used for a manual count with a custom dataset. This will output predicted masks and mask counts for the test images. Refer to https://github.com/Sireesiru/Cryo-TEM-Ultrastructures for the notebook and instructions to use the Bacterial Cell Envelope Thickness Tool.
-#### 3. What classes are needed? 
+#### 3. Select evaluation critera
 This will output metrics for the class of interest. This has been hard-coded to output All classes (averaged OM and IM metrics), OM class and IM class. 
 
 ### Repository Contents
