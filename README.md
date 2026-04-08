@@ -22,7 +22,7 @@ The low dose and ultralow dose test images of *Pantoea* sp. YR343 and annotation
 #### Drop
 Test image python code is located in this folder. Be sure to update the dataset links for a custom dataset. 
 #### Misc
-Example YOLOv11, YOLO26, Detectron2 and SAM3 segmentation model training steps. Please use your own data and Hugging Face token where applicable as these training steps are for demonstrative purposes only. For U-Net, Refer to https://github.com/Sireesiru/Semantic-Segmentation-of-bacterial-cell-envelope-using-U-Nets to be forked to a more in-depth example of U-Net segmentation model training steps. Refer to https://github.com/Sireesiru/Cryo-TEM-Ultrastructures for steps on how to train on a custom dataset, check README.md.
+Example Detectron2 and SAM3 segmentation model training steps. Please use your own data and Hugging Face token where applicable as these training steps are for demonstrative purposes only. For U-Net, Refer to https://github.com/Sireesiru/Semantic-Segmentation-of-bacterial-cell-envelope-using-U-Nets to be forked to a more in-depth example of U-Net segmentation model training steps. Refer to https://github.com/Sireesiru/Cryo-TEM-Ultrastructures for steps on how to train on a custom dataset, check README.md. Demonstrations for YOLOv11 and YOLO26 segmentation model training can be found at https://github.com/ultralytics/ultralytics.
 #### Seed
 Python code for top models and model architectures. 
 #### |  Models
