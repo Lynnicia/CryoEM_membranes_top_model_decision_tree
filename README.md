@@ -44,5 +44,5 @@ Example .csv output from the Top Model Decision Tree.
 
 
 
-## Future Outlook
+### Future Outlook
 This framework presented in this GitHub is not limited to only bacterial membrane segmentation. Please feel free to restructure the model architectures to adapt to your fine-tuned pre-trained model checkpoints to custom datasets. 
