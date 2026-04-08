@@ -8,6 +8,12 @@ This repository hosts a model screening framework for *Pantoea* sp. YR343 low do
 <img width="569" height="408" alt="image" src="https://github.com/user-attachments/assets/e64ff81f-c265-487c-ad3b-95ea3f7cdd05" />
 </div>
 
+### Run the Framework
+1. This notebook must be opened in Google Colab.  Mount Google Drive and run with a GPU-based runtime. ![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)
+(https://colab.research.google.com/github/Lynnicia/CryoEM_ultrastructures_top_model_decision_tree/blob/main/top_model_decision_tree.ipynb)
+2. Open the notebook and follow steps to git clone in folders and files within this repository. There will be a repeating top_model_decision_tree.ipynb (notebook clone) that will not be used.
+3. Save your csv table outputs within your Google Drive or download before closing the notebook. 
+
 ### Framework Workflow
 #### 1. What model and test image is needed?
 Load in your top model checkpoints and architecture. Next, load in test images. 
@@ -36,11 +42,7 @@ Main Notebook to run the Top Model Decision Tree. This notebook is only compatib
 #### top_model_table.csv
 Example .csv output from the Top Model Decision Tree.  
 
-### Run the Framework
-1. This notebook must be opened in Google Colab.  Mount Google Drive and run with a GPU-based runtime. ![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)
-(https://colab.research.google.com/github/Lynnicia/CryoEM_ultrastructures_top_model_decision_tree/blob/main/top_model_decision_tree.ipynb)
-2. Open the notebook and follow steps to git clone in folders and files within this repository. There will be a repeating top_model_decision_tree.ipynb (notebook clone) that will not be used.
-3. Save your csv table outputs within your Google Drive or download before closing the notebook. 
+
 
 ## Future Outlook
 This framework presented in this GitHub is not limited to only bacterial membrane segmentation. Please feel free to restructure the model architectures to adapt to your fine-tuned pre-trained model checkpoints to custom datasets. 
