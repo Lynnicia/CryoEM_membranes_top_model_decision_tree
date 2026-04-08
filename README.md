@@ -37,7 +37,8 @@ Main Notebook to run the Top Model Decision Tree. This notebook is only compatib
 Example .csv output from the Top Model Decision Tree.  
 
 ### Run the Framework
-1. This notebook must be opened in Google Colab.  Mount Google Drive and run with a GPU-based runtime. 
+1. This notebook must be opened in Google Colab.  Mount Google Drive and run with a GPU-based runtime. ![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)
+(https://colab.research.google.com/github/Lynnicia/CryoEM_ultrastructures_top_model_decision_tree/blob/main/top_model_decision_tree.ipynb)
 2. Open the notebook and follow steps to git clone in folders and files within this repository. There will be a repeating top_model_decision_tree.ipynb (notebook clone) that will not be used.
 3. Save your csv table outputs within your Google Drive or download before closing the notebook. 
 
