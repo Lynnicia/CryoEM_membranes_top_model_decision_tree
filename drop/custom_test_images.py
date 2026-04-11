@@ -23,20 +23,22 @@ def resize_images_bilinear(input_folder, output_folder, target_size=(1024,1024))
             resized
         )
         
+TARGET_FOLDER = "/content/CryoEM_membranes_top_model_decision_tree/Custom_Datasets"
+os.makedirs(TARGET_FOLDER, exist_ok=True)
 
 
 resize_images_bilinear(
     input_folder=custom_dataset_folder,
-    output_folder=f"/content/CryoEM_membranes_top_model_decision_tree/Datasets/{test_electron_dose_decision}/COCO/test/{test_image_size_decision}"
+    output_folder=f"/content/CryoEM_membranes_top_model_decision_tree/Custom_Datasets/{test_electron_dose_decision}/COCO/test/{test_image_size_decision}"
 )
 resize_images_bilinear(
     input_folder=custom_dataset_folder,
-    output_folder=f"/content/CryoEM_membranes_top_model_decision_tree/Datasets/{test_electron_dose_decision}/YOLO/test/{test_image_size_decision}"
+    output_folder=f"/content/CryoEM_membranes_top_model_decision_tree/Custom_Datasets/{test_electron_dose_decision}/YOLO/test/{test_image_size_decision}"
 )
 
 import shutil
 
 shutil.copy(
     custom_dataset_json,
-    f"/content/CryoEM_membranes_top_model_decision_tree/Datasets/{test_electron_dose_decision}/COCO/test/{test_image_size_decision}/_annotations.coco.json"
+    f"/content/CryoEM_membranes_top_model_decision_tree/Custom_Datasets/{test_electron_dose_decision}/COCO/test/{test_image_size_decision}/_annotations.coco.json"
 )
