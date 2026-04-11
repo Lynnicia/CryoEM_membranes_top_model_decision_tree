@@ -19,32 +19,56 @@ def reregister_coco(name, json_file, image_root):
 
 def test_image_ULD_640():
 
-    test_annotation_file = "/content/drive/MyDrive/content/ultra_low_dose_bacteria_thick_v2-13/ULD_UNET_640_02-10-2026_04-24-24/test/_annotations.coco.json"
-    test_image_dir = "/content/drive/MyDrive/content/ultra_low_dose_bacteria_thick_v2-13/ULD_UNET_640_02-10-2026_04-24-24/test"
+    #U-Net
+    test_annotation_file = "/content/CryoEM_membranes_top_model_decision_tree/Datasets/ULD/COCO/test/640/_annotations.coco.json"
+    test_image_dir = "/content/CryoEM_membranes_top_model_decision_tree/Datasets/ULD/COCO/test/640"
     test_dataset = CocoBacteriaDataset(test_annotation_file, test_image_dir, transform=True)
-    test_loader = DataLoader(test_dataset, batch_size=4, shuffle=True)
+    test_loader = DataLoader(test_dataset, batch_size=4, shuffle=False)
 
-    test_images_yv11 = glob.glob("/content/drive/MyDrive/content/ultra_low_dose_bacteria_thick_v2-13/ULD-OMIM-YOLOv11_02-08-2026_01-12-05/test/images/*.jpg")
-    test_images_y26 = glob.glob("/content/drive/MyDrive/content/ultra_low_dose_bacteria_thick_v2-13/ULD-OMIM-YOLO26_02-08-2026_02-50-28/test/images/*.jpg")
+    #YOLOv11
+    test_images_yv11 = glob.glob("/content/CryoEM_membranes_top_model_decision_tree/Datasets/ULD/YOLO/test/images/*.jpg")
+    
+    #YOLO26
+    test_images_y26 = glob.glob("/content/CryoEM_membranes_top_model_decision_tree/Datasets/ULD/YOLO/test/images/*.jpg")
 
-    test_img_folder = "/content/drive/MyDrive/content/ULD/COCO/test/640/"
-    test_ann_path = "/content/drive/MyDrive/content/ULD/COCO/test/640/_annotations.coco.json"
+    #SAM3
+    test_img_folder = "/content/CryoEM_membranes_top_model_decision_tree/Datasets/ULD/COCO/test/640"
+    test_ann_path = "/content/CryoEM_membranes_top_model_decision_tree/Datasets/ULD/COCO/test/640/_annotations.coco.json"
+
+    #Detectron2
+    reregister_coco(
+        "bacteria_ULD_OMIM_640_test",
+        f"/content/CryoEM_membranes_top_model_decision_tree/Datasets/ULD/COCO/test/640/_filt_annotations.coco.json",
+        f"/content/CryoEM_membranes_top_model_decision_tree/Datasets/ULD/COCO/test/640"
+        )
 
     return test_loader, test_image_dir, test_images_yv11, test_images_y26, test_img_folder, test_ann_path
 
 
 def test_image_ULD_1024():
 
-    test_annotation_file = "/content/drive/MyDrive/content/ultra_low_dose_bacteria_thick_v2-12/ULD_UNET_1024_02-10-2026_05-28-20/test/_annotations.coco.json"
-    test_image_dir = "/content/drive/MyDrive/content/ultra_low_dose_bacteria_thick_v2-12/ULD_UNET_1024_02-10-2026_05-28-20/test"
+    #U-Net
+    test_annotation_file = "/content/CryoEM_membranes_top_model_decision_tree/Datasets/ULD/COCO/test/1024/_annotations.coco.json"
+    test_image_dir = "/content/CryoEM_membranes_top_model_decision_tree/Datasets/ULD/COCO/test/1024"
     test_dataset = CocoBacteriaDataset(test_annotation_file, test_image_dir, transform=True)
     test_loader = DataLoader(test_dataset, batch_size=4, shuffle=False)
 
-    test_images_yv11 = glob.glob("/content/drive/MyDrive/content/ultra_low_dose_bacteria_thick_v2-12/ULD-OMIM-YOLOv11_02-08-2026_01-51-07/test/images/*.jpg")
-    test_images_y26 = glob.glob("/content/drive/MyDrive/content/ultra_low_dose_bacteria_thick_v2-12/ULD-OMIM-YOLO26_02-08-2026_03-10-21/test/images/*.jpg")
+    #YOLOv11
+    test_images_yv11 = glob.glob("/content/CryoEM_membranes_top_model_decision_tree/Datasets/ULD/YOLO/test/images/*.jpg")
+    
+    #YOLO26
+    test_images_y26 = glob.glob("/content/CryoEM_membranes_top_model_decision_tree/Datasets/ULD/YOLO/test/images/*.jpg")
 
-    test_img_folder = "/content/drive/MyDrive/content/ULD/COCO/test/1024/"
-    test_ann_path = "/content/drive/MyDrive/content/ULD/COCO/test/1024/_annotations.coco.json"
+    #SAM3
+    test_img_folder = "/content/CryoEM_membranes_top_model_decision_tree/Datasets/ULD/COCO/test/1024"
+    test_ann_path = "/content/CryoEM_membranes_top_model_decision_tree/Datasets/ULD/COCO/test/1024/_annotations.coco.json"
+
+    #Detectron2
+    reregister_coco(
+        "bacteria_ULD_OMIM_1024_test",
+        f"/content/CryoEM_membranes_top_model_decision_tree/Datasets/ULD/COCO/test/1024/_filt_annotations.coco.json",
+        f"/content/CryoEM_membranes_top_model_decision_tree/Datasets/ULD/COCO/test/1024"
+        )
 
     return test_loader, test_image_dir, test_images_yv11, test_images_y26, test_img_folder, test_ann_path
 
