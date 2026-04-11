@@ -17,7 +17,7 @@ This repository hosts a model screening framework for *Pantoea* sp. YR343 low do
 ### Framework Workflow
 #### 1. Select mode for electron dose and test images
 Load in your top model checkpoints and architecture. Next, load in test images. 
-#### 2. WSelect mask count
+#### 2. Select mask count
 Prepare a manual count of bacteria in your test images. We used 15 images to manually count a total of 20 bacteria. Around 10-20 images can be used for a manual count with a custom dataset. This will output predicted masks and mask counts for the test images. Refer to https://github.com/Sireesiru/Cryo-TEM-Ultrastructures for the notebook and instructions to use the Bacterial Cell Envelope Thickness Tool.
 #### 3. Select evaluation critera
 This will output metrics for the class of interest. This has been hard-coded to output All classes (averaged OM and IM metrics), OM class and IM class. 
@@ -26,7 +26,7 @@ This will output metrics for the class of interest. This has been hard-coded to 
 #### Datasets 
 The low dose and ultralow dose test images of *Pantoea* sp. YR343 and annotations are located within this folder in both COCO and YOLO formats (Roboflow). The images have also been resized to 640 x 640 and 1024 x 1024. When loading in custom datasets, please use the exact folder format, `_annotations.coco.json` text and annotation class order of 0 = inner membrane (IM) and 1 = outer membrane (OM). In addition, please resize your images to either 640 x 640 or 1024 x 1024 before proceeding. 
 #### Drop
-Test image python code is located in this folder. Be sure to update the dataset links for a custom dataset. 
+Test image python code is located in this folder. If using a custom dataset, be sure to resize your images and refactor your dataset path to exactly match this Dataset folder setup (i.e. resize your images to 1024 x 1024, then change your path from [your_folder/test] and [your_folder/test/_annotations.coco.json] to [/content/CryoEM_membranes_top_model_decision_tree/Datasets/LD/COCO/test/1024] and [/content/CryoEM_membranes_top_model_decision_tree/Datasets/LD/COCO/test/1024/_annotations.coco.json]). 
 #### Misc
 Example Detectron2 and SAM3 segmentation model training steps. Please use your own data and Hugging Face token where applicable as these training steps are for demonstrative purposes only. For U-Net, Refer to https://github.com/Sireesiru/Semantic-Segmentation-of-bacterial-cell-envelope-using-U-Nets to be forked to a more in-depth example of U-Net segmentation model training steps. Refer to https://github.com/Sireesiru/Cryo-TEM-Ultrastructures for steps on how to train on a custom dataset, check README.md. Demonstrations for YOLOv11 and YOLO26 segmentation model training can be found at https://github.com/ultralytics/ultralytics.
 #### Seed
