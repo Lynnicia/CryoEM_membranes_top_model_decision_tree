@@ -7,6 +7,13 @@ if __name__ == "__main__":
     main()
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+%cd /content/CryoEM_membranes_top_model_decision_tree
+
+#from drop import drop_test_images
+from drop.coco_bacteria_dataset import CocoBacteriaDataset
+from torch.utils.data import DataLoader
+from detectron2.data import DatasetCatalog, MetadataCatalog
+from detectron2.data.datasets import register_coco_instances
 
 if custom_dataset == "YES":
     from drop import custom_test_images
@@ -48,4 +55,5 @@ if custom_dataset == "YES":
     }
 
     print(TEST_MAP)
+
 

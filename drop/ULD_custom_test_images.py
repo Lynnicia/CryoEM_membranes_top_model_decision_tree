@@ -8,6 +8,13 @@ if __name__ == "__main__":
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+from drop.coco_bacteria_dataset import CocoBacteriaDataset
+from torch.utils.data import DataLoader
+from detectron2.data import DatasetCatalog, MetadataCatalog
+from detectron2.data.datasets import register_coco_instances
+
+import glob
+
 # Safe copy json (_filt) and edit ONLY the json copy
 from pathlib import Path
 import shutil
@@ -76,7 +83,7 @@ def test_image_ULD_640():
     #U-Net
     test_annotation_file = "/content/CryoEM_membranes_top_model_decision_tree/Custom_Datasets/ULD/COCO/test/640/_annotations.coco.json"
     test_image_dir = "/content/CryoEM_membranes_top_model_decision_tree/Custom_Datasets/ULD/COCO/test/640"
-    test_dataset = CocoBacteriaDataset(test_annotation_file, test_image_dir, transform=True)
+    test_dataset = CocoBacteriaDataset(test_annotation_file, test_image_dir, transform=None)
     test_loader = DataLoader(test_dataset, batch_size=4, shuffle=False)
 
     #YOLOv11
@@ -104,7 +111,7 @@ def test_image_ULD_1024():
     #U-Net
     test_annotation_file = "/content/CryoEM_membranes_top_model_decision_tree/Custom_Datasets/ULD/COCO/test/1024/_annotations.coco.json"
     test_image_dir = "/content/CryoEM_membranes_top_model_decision_tree/Custom_Datasets/ULD/COCO/test/1024"
-    test_dataset = CocoBacteriaDataset(test_annotation_file, test_image_dir, transform=True)
+    test_dataset = CocoBacteriaDataset(test_annotation_file, test_image_dir, transform=None)
     test_loader = DataLoader(test_dataset, batch_size=4, shuffle=False)
 
     #YOLOv11

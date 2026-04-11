@@ -8,6 +8,15 @@ if __name__ == "__main__":
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+
+from drop.coco_bacteria_dataset import CocoBacteriaDataset
+from torch.utils.data import DataLoader
+from detectron2.data import DatasetCatalog, MetadataCatalog
+from detectron2.data.datasets import register_coco_instances
+
+import glob
+
+
 #detectron registration needed here
 def reregister_coco(name, json_file, image_root):
     if name in DatasetCatalog.list():
@@ -20,7 +29,7 @@ def test_image_LD_640():
     #U-Net
     test_annotation_file = "/content/CryoEM_membranes_top_model_decision_tree/Datasets/LD/COCO/test/640/_annotations.coco.json"
     test_image_dir = "/content/CryoEM_membranes_top_model_decision_tree/Datasets/LD/COCO/test/640"
-    test_dataset = CocoBacteriaDataset(test_annotation_file, test_image_dir, transform=True)
+    test_dataset = CocoBacteriaDataset(test_annotation_file, test_image_dir, transform=None)
     test_loader = DataLoader(test_dataset, batch_size=4, shuffle=False)
 
     #YOLOv11
@@ -48,7 +57,7 @@ def test_image_LD_1024():
     #U-Net
     test_annotation_file = "/content/CryoEM_membranes_top_model_decision_tree/Datasets/LD/COCO/test/1024/_annotations.coco.json"
     test_image_dir = "/content/CryoEM_membranes_top_model_decision_tree/Datasets/LD/COCO/test/1024"
-    test_dataset = CocoBacteriaDataset(test_annotation_file, test_image_dir, transform=True)
+    test_dataset = CocoBacteriaDataset(test_annotation_file, test_image_dir, transform=None)
     test_loader = DataLoader(test_dataset, batch_size=4, shuffle=False)
 
     #YOLOv11
