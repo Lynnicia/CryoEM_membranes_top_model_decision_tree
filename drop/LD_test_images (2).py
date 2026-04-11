@@ -40,7 +40,7 @@ def test_image_LD_640():
         f"/content/CryoEM_membranes_top_model_decision_tree/Datasets/LD/COCO/test/640"
         )
 
-    return test_loader, test_image_dir, test_images_yv11, test_images_y26, test_img_folder, test_ann_path, register
+    return test_loader, test_image_dir, test_images_yv11, test_images_y26, test_img_folder, test_ann_path
 
 
 def test_image_LD_1024():
