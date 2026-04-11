@@ -8,6 +8,60 @@ if __name__ == "__main__":
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+# Safe copy json (_filt) and edit ONLY the json copy
+from pathlib import Path
+import shutil
+
+src = Path(f"/content/CryoEM_membranes_top_model_decision_tree/Custom_Datasets/{test_electron_dose_decision}/COCO/test/{test_image_size_decision}/_annotations.coco.json")
+dst = Path(f"/content/CryoEM_membranes_top_model_decision_tree/Custom_Datasets/{test_electron_dose_decision}/COCO/test/{test_image_size_decision}/_filt_annotations.coco.json")
+
+# If destination file does NOT exist
+if not dst.exists():
+
+    # Ensure parent directory exists
+    dst.parent.mkdir(parents=True, exist_ok=True)
+
+    shutil.copy(src, dst)
+    print("Copied to:", dst)
+
+else:
+    print("Destination already exists:", dst)
+
+
+
+
+# Find original 3 classes: bacteria, IM and OM
+
+with open(f"/content/CryoEM_membranes_top_model_decision_tree/Custom_Datasets/{test_electron_dose_decision}/COCO/test/{test_image_size_decision}/_filt_annotations.coco.json") as f:
+    coco = json.load(f)
+
+for c in coco["categories"]:
+    print(c["id"], c["name"])
+
+cats = sorted(coco["categories"], key=lambda x: x["id"])
+
+
+# Update annotations
+
+BAD_ID = 0
+
+coco["categories"] = [
+    c for c in coco["categories"] if c["id"] != BAD_ID
+]
+
+coco["annotations"] = [
+    ann for ann in coco["annotations"]
+    if ann["category_id"] != BAD_ID
+]
+
+with open(f"/content/CryoEM_membranes_top_model_decision_tree/Custom_Datasets/{test_electron_dose_decision}/COCO/test/{test_image_size_decision}/_filt_annotations.coco.json", "w") as f:
+    json.dump(coco, f, indent=2)
+
+for c in coco["categories"]:
+    print(c["id"], c["name"])
+
+
+
 #detectron registration needed here
 def reregister_coco(name, json_file, image_root):
     if name in DatasetCatalog.list():
