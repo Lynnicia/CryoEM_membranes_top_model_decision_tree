@@ -63,7 +63,7 @@ def run_model_speed_pipeline_y26(Model, Model_Image_Size, Model_Electron_Dose, T
     # =========================
     # Main loop for folder
     # =========================
-    model_path = MODEL_PATH_yv11
+    model_path = MODEL_PATH_y26
     input_folder = test_images_orig_folder
 
 
@@ -71,7 +71,7 @@ def run_model_speed_pipeline_y26(Model, Model_Image_Size, Model_Electron_Dose, T
     model = YOLO(MODEL_PATH_y26)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    print(model)
+    print(MODEL_PATH_y26)
     print(input_folder)
 
     images = []

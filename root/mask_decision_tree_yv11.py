@@ -66,7 +66,7 @@ def run_model_pipeline_yv11(Model, Model_Image_Size, Model_Electron_Dose, Test_I
     model_path = MODEL_PATH_yv11
     input_folder = test_images_orig_folder
 
-    output_folder = os.path.join(TARGET_FOLDER, f"Results_{Model}")
+    output_folder = os.path.join(TARGET_FOLDER, f"Results_{Model}-{Model_Electron_Dose}")
     os.makedirs(output_folder, exist_ok=True)
 
     model = YOLO(model_path)

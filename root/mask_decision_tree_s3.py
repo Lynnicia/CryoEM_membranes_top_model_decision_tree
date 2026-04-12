@@ -178,7 +178,7 @@ def run_model_pipeline_s3(Model, Model_Image_Size, Model_Electron_Dose, Test_Ima
 
     input_folder = test_img_folder
 
-    output_folder = os.path.join(TARGET_FOLDER, f"Results_{Model}")
+    output_folder = os.path.join(TARGET_FOLDER, f"Results_{Model}-{Model_Electron_Dose}")
     os.makedirs(output_folder, exist_ok=True)
 
 

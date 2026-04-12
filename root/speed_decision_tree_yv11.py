@@ -70,8 +70,7 @@ def run_model_speed_pipeline_yv11(Model, Model_Image_Size, Model_Electron_Dose, 
     # YOLOv11 Timing
     model = YOLO(MODEL_PATH_yv11)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-    print(model)
+    print(MODEL_PATH_yv11)
     print(input_folder)
 
     images = []
@@ -111,7 +110,9 @@ def run_model_speed_pipeline_yv11(Model, Model_Image_Size, Model_Electron_Dose, 
     avg_time_per_image = total_time / len(images)
     fps = 1000 / avg_time_per_image
 
+    
 
+    print(f"Speed test for {Model
     print(f"Avg image time per image: {avg_time_per_image:.2f} ms")
     """ //#####|tree_root|#####\\ """
     df.loc[all_condition, "Avg Time_Image"] = avg_time_per_image

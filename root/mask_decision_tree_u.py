@@ -229,7 +229,7 @@ def run_model_pipeline_u(Model, Model_Image_Size, Model_Electron_Dose, Test_Imag
     model_path = MODEL_PATH_u
     input_folder = test_image_dir
 
-    output_folder = os.path.join(TARGET_FOLDER, f"Results_{Model}")
+    output_folder = os.path.join(TARGET_FOLDER, f"Results_{Model}-{Model_Electron_Dose}")
     os.makedirs(output_folder, exist_ok=True)
 
 
