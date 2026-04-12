@@ -325,7 +325,7 @@ def run_model_pipeline_u(Model, Model_Image_Size, Model_Electron_Dose, Test_Imag
 
     print(image_files[:3])
 
-    print(f"\nTotal bacteria across all images: {total_bacteria}")
+    print(f"\nTotal predicted bacteria with U-Net across all images: {total_bacteria}")
     """ //#####|tree_root|#####\\ """
     df.loc[all_condition, "total_bacteria"] = total_bacteria
 

@@ -132,7 +132,7 @@ def run_model_pipeline_yv11(Model, Model_Image_Size, Model_Electron_Dose, Test_I
         total_bacteria += num_bacteria
         print(f"{img_path}: {num_bacteria} bacteria")
 
-    print(f"\nTotal bacteria across all images: {total_bacteria}")
+    print(f"\nTotal predicted bacteria with YOLOv11 across all images: {total_bacteria}")
     """ //#####|tree_root|#####\\ """
     df.loc[all_condition, "total_bacteria"] = total_bacteria
 
