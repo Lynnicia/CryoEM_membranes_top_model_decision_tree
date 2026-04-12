@@ -8,6 +8,15 @@ if __name__ == "__main__":
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+import pandas as pd
+from ultralytics import YOLO
+import numpy as np
+import cv2
+import glob
+import os
+from sklearn.metrics import precision_recall_curve, auc
+
+
 # YOLOv11
 def run_model_pipeline_yv11(Model, Model_Image_Size, Model_Electron_Dose, Test_Image_Size, Test_Electron_Dose, input_folder, TARGET_FOLDER, MODEL_PATH_yv11, test_images_yv11, test_images_orig_folder):
     MODEL_PATH = MODEL_PATH_yv11
@@ -15,7 +24,7 @@ def run_model_pipeline_yv11(Model, Model_Image_Size, Model_Electron_Dose, Test_I
     test_images = test_images_yv11
 
 
-    csv_path = "/content/drive/MyDrive/content/top_model_table.csv"
+    csv_path = "/content/CryoEM_membranes_top_model_decision_tree/top_model_table.csv"
     df = pd.read_csv(csv_path)
 
     #convert Image size values to integers
