@@ -225,7 +225,7 @@ def run_model_speed_pipeline_u(Model, Model_Image_Size, Model_Electron_Dose, Tes
     # WARMUP
     # -------------------------
     with torch.no_grad():
-        for i, (raw_imgs, raw_masks, images, masks) in enumerate(test_loader):
+        for i, (images, masks) in enumerate(test_loader):
             images = images.to(device, non_blocking=True)
             _ = model(images)
             if i == 9:   # 10 warmup batches
@@ -244,7 +244,7 @@ def run_model_speed_pipeline_u(Model, Model_Image_Size, Model_Electron_Dose, Tes
 
 
     with torch.no_grad():
-        for raw_imgs, raw_masks, images, masks in test_loader:
+        for images, masks in test_loader:
 
             images = images.to(device, non_blocking=True)
             masks = masks.to(device, non_blocking=True)
