@@ -240,6 +240,11 @@ def run_model_pipeline_u(Model, Model_Image_Size, Model_Electron_Dose, Test_Imag
 
     for img_path in image_files:
 
+        base = os.path.splitext(os.path.basename(img_path))[0]
+        save_img = os.path.join(output_folder, f"{base}_thickness.png")
+        save_csv = os.path.join(output_folder, f"{base}_thickness.csv")
+        save_angles_csv = os.path.join(output_folder, f"{base}_angles.csv")
+        
         used_ims = set()
 
         print("Processing:", img_path)
@@ -276,6 +281,9 @@ def run_model_pipeline_u(Model, Model_Image_Size, Model_Electron_Dose, Test_Imag
                 masks.append((labels == label_id).astype(np.uint8) * 255)
             return masks
 
+        im_mask = cv2.resize(im_mask, (orig_w, orig_h), interpolation=cv2.INTER_NEAREST)
+        om_mask = cv2.resize(om_mask, (orig_w, orig_h), interpolation=cv2.INTER_NEAREST)
+
         im_masks = split_instances(im_mask)
         om_masks = split_instances(om_mask)
 
@@ -299,6 +307,19 @@ def run_model_pipeline_u(Model, Model_Image_Size, Model_Electron_Dose, Test_Imag
             used_ims.add(best_im_idx)
 
         print(f"{img_path}: {total_bacteria} bacteria")
+
+        # Skip if OM or IM missing
+        if not om_masks or not im_masks:
+            print(f"Skipping {img_path} (missing OM or IM contour)")
+            continue
+
+        # Save combined masks
+        im_combined = np.maximum.reduce(im_masks)
+        om_combined = np.maximum.reduce(om_masks)
+
+        cv2.imwrite(os.path.join(output_folder, f"{base}_IM_mask.png"), im_combined)
+        cv2.imwrite(os.path.join(output_folder, f"{base}_OM_mask.png"), om_combined)
+
 
     print("Found images:", len(image_files))
 
