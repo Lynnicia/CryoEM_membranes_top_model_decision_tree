@@ -19,9 +19,9 @@ import torch
 
 # YOLOv11
 def run_model_speed_pipeline_yv11(Model, Model_Image_Size, Model_Electron_Dose, Test_Image_Size, Test_Electron_Dose, input_folder, TARGET_FOLDER, MODEL_PATH_yv11, test_images_yv11, test_images_orig_folder):
-    MODEL_PATH = MODEL_PATH_yv11
-    model = YOLO(MODEL_PATH)
+
     test_images = test_images_yv11
+    TARGET_SIZE = Test_Image_Size
 
 
     csv_path = "/content/CryoEM_membranes_top_model_decision_tree/top_model_table.csv"
@@ -68,16 +68,11 @@ def run_model_speed_pipeline_yv11(Model, Model_Image_Size, Model_Electron_Dose, 
 
 
     # YOLOv11 Timing
-
-    from ultralytics import YOLO
-    import torch
-    import cv2
-
     model = YOLO(MODEL_PATH_yv11)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     print(model)
-    print(test_image_dir)
+    print(input_folder)
 
     images = []
 
@@ -125,7 +120,6 @@ def run_model_speed_pipeline_yv11(Model, Model_Image_Size, Model_Electron_Dose, 
     df.loc[all_condition, "FPS"] = fps
     #-----------------------------------------------
 
-    import torch
 
     if torch.cuda.is_available():
         print("GPU Name:", torch.cuda.get_device_name(0))
@@ -141,8 +135,6 @@ def run_model_speed_pipeline_yv11(Model, Model_Image_Size, Model_Electron_Dose, 
         print("Total Memory (GB):", props.total_memory / 1e9)
         print("Multiprocessors:", props.multi_processor_count)
         print("Compute Capability:", f"{props.major}.{props.minor}")
-
-    !nvidia-smi
 
     if torch.cuda.is_available():
         props = torch.cuda.get_device_properties(0)
