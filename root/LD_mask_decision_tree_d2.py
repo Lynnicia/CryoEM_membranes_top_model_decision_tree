@@ -159,12 +159,16 @@ def run_model_pipeline_d2(Model, Model_Image_Size, Model_Electron_Dose, Test_Ima
             print(f"{img_path}: {total_bacteria} bacteria")
 
         
-
-
         # Skip if OM or IM missing
         if not om_masks or not im_masks:
             print(f"Skipping {img_path} (missing OM or IM contour)")
             continue
+
+        im_combined = np.maximum.reduce(im_masks) if im_masks else np.zeros((img_height, img_width), dtype=np.uint8)
+        om_combined = np.maximum.reduce(om_masks) if om_masks else np.zeros((img_height, img_width), dtype=np.uint8)
+
+        cv2.imwrite(os.path.join(output_folder, f"{base}_IM_mask.png"), im_combined)
+        cv2.imwrite(os.path.join(output_folder, f"{base}_OM_mask.png"), om_combined)
 
     print(f"\nTotal bacteria across all images: {total_bacteria}")
     """ //#####|tree_root|#####\\ """
