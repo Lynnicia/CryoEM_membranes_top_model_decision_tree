@@ -93,10 +93,7 @@ def run_model_pipeline_yv11(Model, Model_Image_Size, Model_Electron_Dose, Test_I
         image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         img_height, img_width = image_rgb.shape[:2]
 
-        results = model(image_rgb, verbose=False)[0]
-
-        # Run YOLO on resized image
-        results = model(image, verbose=False)[0]
+        results = model(image_rgb, imgsize=1024, vverbose=False)[0]
 
         #  Skip images where YOLO found no masks
         if results.masks is None:
