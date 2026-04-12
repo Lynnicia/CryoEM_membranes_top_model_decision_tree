@@ -111,7 +111,7 @@ def run_model_speed_pipeline_y26(Model, Model_Image_Size, Model_Electron_Dose, T
     avg_time_per_image = total_time / len(images)
     fps = 1000 / avg_time_per_image
 
-
+    print(f"Speed test for {Model}-{Model_Electron_Dose}:")
     print(f"Avg image time per image: {avg_time_per_image:.2f} ms")
     """ //#####|tree_root|#####\\ """
     df.loc[all_condition, "Avg Time_Image"] = avg_time_per_image

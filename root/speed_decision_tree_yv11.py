@@ -112,7 +112,7 @@ def run_model_speed_pipeline_yv11(Model, Model_Image_Size, Model_Electron_Dose, 
 
     
 
-    print(f"Speed test for {Model
+    print(f"Speed test for {Model}-{Model_Electron_Dose}:")
     print(f"Avg image time per image: {avg_time_per_image:.2f} ms")
     """ //#####|tree_root|#####\\ """
     df.loc[all_condition, "Avg Time_Image"] = avg_time_per_image
