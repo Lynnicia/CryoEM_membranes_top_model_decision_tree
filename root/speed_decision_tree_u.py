@@ -219,115 +219,82 @@ def run_model_speed_pipeline_u(Model, Model_Image_Size, Model_Electron_Dose, Tes
     model.load_state_dict(torch.load(MODEL_PATH))
     model.eval()
 
-    def split_instances(binary_mask):
-        num_labels, labels = cv2.connectedComponents(binary_mask)
-        masks = []
-        for label_id in range(1, num_labels):
-            masks.append((labels == label_id).astype(np.uint8) * 255)
-        return masks
+    torch.backends.cudnn.benchmark = True
 
-    model_path = MODEL_PATH_u
-    input_folder = test_image_dir
+    # -------------------------
+    # WARMUP
+    # -------------------------
+    with torch.no_grad():
+        for i, (raw_imgs, raw_masks, images, masks) in enumerate(test_loader):
+            images = images.to(device, non_blocking=True)
+            _ = model(images)
+            if i == 9:   # 10 warmup batches
+                break
 
-    output_folder = os.path.join(TARGET_FOLDER, f"Results_{Model}-{Model_Electron_Dose}")
-    os.makedirs(output_folder, exist_ok=True)
+    torch.cuda.synchronize()
 
+    # -------------------------
+    # TIMING
+    # -------------------------
+    starter = torch.cuda.Event(enable_timing=True)
+    ender = torch.cuda.Event(enable_timing=True)
 
-    image_files = glob.glob(os.path.join(input_folder, "*.jpg")) + \
-                  glob.glob(os.path.join(input_folder, "*.png"))
-
-    total_bacteria = 0
-
-    for img_path in image_files:
-
-        base = os.path.splitext(os.path.basename(img_path))[0]
-        save_img = os.path.join(output_folder, f"{base}_thickness.png")
-        save_csv = os.path.join(output_folder, f"{base}_thickness.csv")
-        save_angles_csv = os.path.join(output_folder, f"{base}_angles.csv")
-        
-        used_ims = set()
-
-        print("Processing:", img_path)
-
-        img = cv2.imread(img_path)
-        if img is None:
-            continue
-
-        orig_h, orig_w = img.shape[:2]
-
-        # Resize for model
-        img_resized = cv2.resize(img, (TARGET_SIZE, TARGET_SIZE), interpolation=cv2.INTER_LINEAR)
-
-        image_gray = cv2.cvtColor(img_resized, cv2.COLOR_BGR2GRAY)
-        image_gray_float = image_gray / 255.0
-
-        img_tensor = torch.tensor(image_gray_float, dtype=torch.float32)\
-                        .unsqueeze(0).unsqueeze(0).to(device)
-
-        # 🔥 MODEL PREDICTION
-        with torch.no_grad():
-            outputs = model(img_tensor)
-            probs = torch.sigmoid(outputs)
-
-        pred_masks = (probs > 0.5).cpu().numpy()[0]
-
-        im_mask = (pred_masks[0] * 255).astype(np.uint8)
-        om_mask = (pred_masks[1] * 255).astype(np.uint8)
-
-        def split_instances(binary_mask):
-            num_labels, labels = cv2.connectedComponents(binary_mask)
-            masks = []
-            for label_id in range(1, num_labels):
-                masks.append((labels == label_id).astype(np.uint8) * 255)
-            return masks
-
-        im_mask = cv2.resize(im_mask, (orig_w, orig_h), interpolation=cv2.INTER_NEAREST)
-        om_mask = cv2.resize(om_mask, (orig_w, orig_h), interpolation=cv2.INTER_NEAREST)
-
-        im_masks = split_instances(im_mask)
-        om_masks = split_instances(om_mask)
-
-        for om_mask_bin in om_masks:
-
-            best_overlap, best_im_idx = 0, None
-
-            for j, im_mask_bin in enumerate(im_masks):
-                if j in used_ims:
-                    continue
-                overlap = np.sum((om_mask_bin > 0) & (im_mask_bin > 0))
-                if overlap > best_overlap:
-                    best_overlap, best_im_idx = overlap, j
-
-            # 🚨 FILTER
-            if best_im_idx is None:
-                continue
-
-            # ✅ VALID bacterium
-            total_bacteria += 1
-            used_ims.add(best_im_idx)
-
-        print(f"{img_path}: {total_bacteria} bacteria")
-
-        # Skip if OM or IM missing
-        if not om_masks or not im_masks:
-            print(f"Skipping {img_path} (missing OM or IM contour)")
-            continue
-
-        # Save combined masks
-        im_combined = np.maximum.reduce(im_masks)
-        om_combined = np.maximum.reduce(om_masks)
-
-        cv2.imwrite(os.path.join(output_folder, f"{base}_IM_mask.png"), im_combined)
-        cv2.imwrite(os.path.join(output_folder, f"{base}_OM_mask.png"), om_combined)
+    total_time = 0
+    total_images = 0
 
 
-    print("Found images:", len(image_files))
+    with torch.no_grad():
+        for raw_imgs, raw_masks, images, masks in test_loader:
 
-    print(image_files[:3])
+            images = images.to(device, non_blocking=True)
+            masks = masks.to(device, non_blocking=True)
 
-    print(f"\nTotal predicted bacteria with U-Net across all images: {total_bacteria}")
+            starter.record()
+            outputs = model(images)
+            ender.record()
+
+            torch.cuda.synchronize()
+            batch_time = starter.elapsed_time(ender)  # ms
+
+            total_time += batch_time
+            total_images += images.size(0)
+
+    avg_time_per_batch = total_time / len(test_loader)
+    avg_time_per_image = total_time / total_images
+    fps = 1000 / avg_time_per_image
+
+    print(f"Avg batch time per batch: {avg_time_per_batch:.2f} ms")
+    print(f"Avg image time per image: {avg_time_per_image:.2f} ms")
     """ //#####|tree_root|#####\\ """
-    df.loc[all_condition, "total_bacteria"] = total_bacteria
+    df.loc[all_condition, "Avg Time_Image"] = avg_time_per_image
+    print(f"FPS: {fps:.2f}")
+    """ //#####|tree_root|#####\\ """
+    df.loc[all_condition, "FPS"] = fps
+    #-----------------------------------------------
+
+    import torch
+
+    if torch.cuda.is_available():
+        print("GPU Name:", torch.cuda.get_device_name(0))
+        print("CUDA Version:", torch.version.cuda)
+        print("GPU Count:", torch.cuda.device_count())
+        print("Current Device:", torch.cuda.current_device())
+    else:
+        print("No CUDA GPU detected.")
+
+    if torch.cuda.is_available():
+        props = torch.cuda.get_device_properties(0)
+
+        print("Total Memory (GB):", props.total_memory / 1e9)
+        print("Multiprocessors:", props.multi_processor_count)
+        print("Compute Capability:", f"{props.major}.{props.minor}")
+
+    if torch.cuda.is_available():
+        props = torch.cuda.get_device_properties(0)
+        print(f"GPU: {torch.cuda.get_device_name(0)}")
+        print(f"Total Memory (GB): {props.total_memory / 1e9:.1f} GB")
+        print(f"CUDA Version: {torch.version.cuda}")
+        print(f"Compute Capability: {props.major}.{props.minor}")
 
     df.to_csv(csv_path, index=False)
     print("CSV updated successfully to Tree ✅")
