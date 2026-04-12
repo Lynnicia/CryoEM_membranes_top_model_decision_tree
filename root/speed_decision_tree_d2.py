@@ -10,9 +10,12 @@ if __name__ == "__main__":
 from detectron2.config import get_cfg
 from detectron2 import model_zoo
 from detectron2.engine import DefaultPredictor
+from detectron2.modeling import build_model
+from detectron2.checkpoint import DetectionCheckpointer
+import torch
 
 # Detectron2
-def run_model_speed_pipeline_d2(Model, Model_Image_Size, Model_Electron_Dose, Test_Image_Size, Test_Electron_Dose, input_folder, TARGET_FOLDER, MODEL_PATH_d2, test_img_folder):
+def run_model_speed_pipeline_d2(Model, Model_Image_Size, Model_Electron_Dose, Test_Image_Size, Test_Electron_Dose, input_folder, TARGET_FOLDER, MODEL_PATH_d2, test_img_folder, test_loader):
     import matplotlib.pyplot as plt
     import numpy as np
     import cv2
@@ -89,6 +92,10 @@ def run_model_speed_pipeline_d2(Model, Model_Image_Size, Model_Electron_Dose, Te
     # COCO evaluation
     # ===============================
 
+    for batch in test_loader:
+    print(batch)
+    break
+
     # -------------------------
     # WARMUP
     # -------------------------
@@ -99,6 +106,7 @@ def run_model_speed_pipeline_d2(Model, Model_Image_Size, Model_Electron_Dose, Te
             break
 
     torch.cuda.synchronize()
+
 
     # -------------------------
     # TIMING
@@ -123,48 +131,45 @@ def run_model_speed_pipeline_d2(Model, Model_Image_Size, Model_Electron_Dose, Te
             total_time += starter.elapsed_time(ender)
             total_images += len(batch)
 
-        avg_time_per_image = total_time / total_images
-        fps = 1000 / avg_time_per_image
+    avg_time_per_image = total_time / total_images
+    fps = 1000 / avg_time_per_image
 
-        print(f"Speed test for {Model}-{Model_Electron_Dose}:")
-        print(f"Detectron2 Avg time: {avg_time_per_image:.2f} ms")
-        """ //#####|tree_root|#####\\ """
-        df.loc[all_condition, "Avg Time_Image"] = avg_time_per_image
-        print(f"FPS: {fps:.2f}")
-        df.loc[all_condition, "FPS"] = fps
-
+    print(f"Speed test for {Model}-{Model_Electron_Dose}:")
+    print(f"Detectron2 Avg time: {avg_time_per_image:.2f} ms")
+    """ //#####|tree_root|#####\\ """
+    df.loc[all_condition, "Avg Time_Image"] = avg_time_per_image
+    print(f"FPS: {fps:.2f}")
+    df.loc[all_condition, "FPS"] = fps
 
         #-----------------------------------------------
 
-        import torch
+    if torch.cuda.is_available():
+        print("GPU Name:", torch.cuda.get_device_name(0))
+        print("CUDA Version:", torch.version.cuda)
+        print("GPU Count:", torch.cuda.device_count())
+        print("Current Device:", torch.cuda.current_device())
+    else:
+        print("No CUDA GPU detected.")
 
-        if torch.cuda.is_available():
-            print("GPU Name:", torch.cuda.get_device_name(0))
-            print("CUDA Version:", torch.version.cuda)
-            print("GPU Count:", torch.cuda.device_count())
-            print("Current Device:", torch.cuda.current_device())
-        else:
-            print("No CUDA GPU detected.")
+    if torch.cuda.is_available():
+        props = torch.cuda.get_device_properties(0)
 
-        if torch.cuda.is_available():
-            props = torch.cuda.get_device_properties(0)
+        print("Total Memory (GB):", props.total_memory / 1e9)
+        print("Multiprocessors:", props.multi_processor_count)
+        print("Compute Capability:", f"{props.major}.{props.minor}")
 
-            print("Total Memory (GB):", props.total_memory / 1e9)
-            print("Multiprocessors:", props.multi_processor_count)
-            print("Compute Capability:", f"{props.major}.{props.minor}")
+    if torch.cuda.is_available():
+        props = torch.cuda.get_device_properties(0)
+        print(f"GPU: {torch.cuda.get_device_name(0)}")
+        print(f"Total Memory (GB): {props.total_memory / 1e9:.1f} GB")
+        print(f"CUDA Version: {torch.version.cuda}")
+        print(f"Compute Capability: {props.major}.{props.minor}")
 
-        if torch.cuda.is_available():
-            props = torch.cuda.get_device_properties(0)
-            print(f"GPU: {torch.cuda.get_device_name(0)}")
-            print(f"Total Memory (GB): {props.total_memory / 1e9:.1f} GB")
-            print(f"CUDA Version: {torch.version.cuda}")
-            print(f"Compute Capability: {props.major}.{props.minor}")
-
-        df.to_csv(csv_path, index=False)
-        print("CSV updated successfully to Tree ✅")
+    df.to_csv(csv_path, index=False)
+    print("CSV updated successfully to Tree ✅")
 
 
-    return Model, Model_Image_Size, Model_Electron_Dose, Test_Image_Size, Test_Electron_Dose, input_folder, TARGET_FOLDER, MODEL_PATH_d2, test_img_folder
+    return Model, Model_Image_Size, Model_Electron_Dose, Test_Image_Size, Test_Electron_Dose, input_folder, TARGET_FOLDER, MODEL_PATH_d2, test_img_folder, test_loader
 
 
 
