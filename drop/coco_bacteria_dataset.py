@@ -13,7 +13,7 @@ class CocoBacteriaDataset(Dataset):
     def __init__(self, annotation_file, image_dir, transform=None):
         self.coco = COCO(annotation_file)
         self.image_dir = image_dir
-
+        self.transform = transform
         self.image_ids = self.coco.getImgIds()
         self.cat_ids = self.coco.getCatIds(catNms=['IM', 'OM'])
 
