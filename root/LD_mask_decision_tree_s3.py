@@ -133,14 +133,13 @@ def run_model_pipeline_s3(Model, Model_Image_Size, Model_Electron_Dose, Test_Ima
     )
 
     # Build datapoint
-    COUNTER = 1
     def make_datapoint(pil_image, prompts):
-        global COUNTER
         dp = Datapoint(find_queries=[], images=[])
         w, h = pil_image.size
         dp.images = [SAMImage(data=pil_image, objects=[], size=[h, w])]
         ids = {}
-        for prompt in prompts:
+
+        for i, prompt in enumerate(prompts):
             dp.find_queries.append(FindQueryLoaded(
                 query_text=prompt,
                 image_id=0,
@@ -148,16 +147,17 @@ def run_model_pipeline_s3(Model, Model_Image_Size, Model_Electron_Dose, Test_Ima
                 is_exhaustive=True,
                 query_processing_order=0,
                 inference_metadata=InferenceMetadata(
-                    coco_image_id=COUNTER,
-                    original_image_id=COUNTER,
+                    coco_image_id=i,
+                    original_image_id=i,
                     original_category_id=1,
                     original_size=[w, h],
                     object_id=0,
                     frame_index=0,
                 )
             ))
-            ids[prompt] = COUNTER
-            COUNTER += 1
+
+            ids[prompt] = i
+
         return dp, ids
 
     def move_to_cuda(obj):
