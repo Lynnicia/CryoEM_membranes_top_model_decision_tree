@@ -120,6 +120,12 @@ def run_model_pipeline_yv11(Model, Model_Image_Size, Model_Electron_Dose, Test_I
             print(f"Skipping {img_path} (missing OM or IM contour)")
             continue
 
+        im_combined = np.maximum.reduce(im_masks) if im_masks else np.zeros((img_height, img_width), dtype=np.uint8)
+        om_combined = np.maximum.reduce(om_masks) if om_masks else np.zeros((img_height, img_width), dtype=np.uint8)
+
+        cv2.imwrite(os.path.join(output_folder, f"{base}_IM_mask.png"), im_combined)
+        cv2.imwrite(os.path.join(output_folder, f"{base}_OM_mask.png"), om_combined)
+        
         class_ids = results.boxes.cls.cpu().numpy().astype(int)
 
         num_bacteria = np.sum(class_ids == 1)  # count OM only

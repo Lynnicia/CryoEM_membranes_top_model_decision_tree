@@ -232,10 +232,19 @@ def run_model_pipeline_s3(Model, Model_Image_Size, Model_Electron_Dose, Test_Ima
             print(f"Skipping {img_path} (missing OM or IM contour)")
             continue
 
+        # Save combined masks
+        im_combined = np.maximum.reduce(im_masks)
+        om_combined = np.maximum.reduce(om_masks)
+
+        cv2.imwrite(os.path.join(output_folder, f"{ibase}_IM_mask.png"), im_combined)
+        cv2.imwrite(os.path.join(output_folder, f"{ibase}_OM_mask.png"), om_combined)
 
         num_bacteria = len(om_masks)  # count OM only
         total_bacteria += num_bacteria
         print(f"{img_path}: {num_bacteria} bacteria")
+
+
+
 
     print(f"\nTotal bacteria across all images: {total_bacteria}")
     """ //#####|tree_root|#####\\ """
@@ -247,7 +256,6 @@ def run_model_pipeline_s3(Model, Model_Image_Size, Model_Electron_Dose, Test_Ima
     # CLEAR MEMORY
     import gc
     import torch
-
     del batch, output, results, dp, pil_image, image
     gc.collect()
     torch.cuda.empty_cache()
