@@ -34,9 +34,11 @@ def test_image_ULD_640():
 
     #YOLOv11
     test_images_yv11 = glob.glob("/content/CryoEM_membranes_top_model_decision_tree/Datasets/ULD/YOLO/test/images/*.jpg")
+    test_images_orig_folder = "/content/CryoEM_membranes_top_model_decision_tree/Datasets/ULD/YOLO/test/images"
     
     #YOLO26
     test_images_y26 = glob.glob("/content/CryoEM_membranes_top_model_decision_tree/Datasets/ULD/YOLO/test/images/*.jpg")
+    test_images_orig_folder = "/content/CryoEM_membranes_top_model_decision_tree/Datasets/ULD/YOLO/test/images"
 
     #SAM3
     test_img_folder = "/content/CryoEM_membranes_top_model_decision_tree/Datasets/ULD/COCO/test/640"
@@ -49,7 +51,7 @@ def test_image_ULD_640():
         f"/content/CryoEM_membranes_top_model_decision_tree/Datasets/ULD/COCO/test/640"
         )
 
-    return test_loader, test_image_dir, test_images_yv11, test_images_y26, test_img_folder, test_ann_path
+    return test_loader, test_image_dir, test_images_yv11, test_images_y26, test_img_folder, test_ann_path, test_images_orig_folder
 
 
 def test_image_ULD_1024():
@@ -62,9 +64,11 @@ def test_image_ULD_1024():
 
     #YOLOv11
     test_images_yv11 = glob.glob("/content/CryoEM_membranes_top_model_decision_tree/Datasets/ULD/YOLO/test/images/*.jpg")
+    test_images_orig_folder = "/content/CryoEM_membranes_top_model_decision_tree/Datasets/ULD/YOLO/test/images"
     
     #YOLO26
     test_images_y26 = glob.glob("/content/CryoEM_membranes_top_model_decision_tree/Datasets/ULD/YOLO/test/images/*.jpg")
+    test_images_orig_folder = "/content/CryoEM_membranes_top_model_decision_tree/Datasets/ULD/YOLO/test/images"
 
     #SAM3
     test_img_folder = "/content/CryoEM_membranes_top_model_decision_tree/Datasets/ULD/COCO/test/1024"
@@ -77,7 +81,7 @@ def test_image_ULD_1024():
         f"/content/CryoEM_membranes_top_model_decision_tree/Datasets/ULD/COCO/test/1024"
         )
 
-    return test_loader, test_image_dir, test_images_yv11, test_images_y26, test_img_folder, test_ann_path
+    return test_loader, test_image_dir, test_images_yv11, test_images_y26, test_img_folder, test_ann_path, test_images_orig_folder
 
 
 TEST_MAP = {
