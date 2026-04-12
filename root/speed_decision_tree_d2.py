@@ -12,7 +12,7 @@ from detectron2 import model_zoo
 from detectron2.engine import DefaultPredictor
 
 # Detectron2
-def run_model_pipeline_d2(Model, Model_Image_Size, Model_Electron_Dose, Test_Image_Size, Test_Electron_Dose, input_folder, TARGET_FOLDER, MODEL_PATH_d2, test_img_folder):
+def run_model_speed_pipeline_d2(Model, Model_Image_Size, Model_Electron_Dose, Test_Image_Size, Test_Electron_Dose, input_folder, TARGET_FOLDER, MODEL_PATH_d2, test_img_folder):
     import matplotlib.pyplot as plt
     import numpy as np
     import cv2
@@ -41,8 +41,6 @@ def run_model_pipeline_d2(Model, Model_Image_Size, Model_Electron_Dose, Test_Ima
         (df["Class"] == "All")
     )
 
-
-
     im_condition = (
         (df["Model"] == Model) &
         (df["Model_Electron_Dose"] == Model_Electron_Dose) &
@@ -65,117 +63,106 @@ def run_model_pipeline_d2(Model, Model_Image_Size, Model_Electron_Dose, Test_Ima
     # Main loop for folder
     # =========================
 
-    # Create predictor
     cfg = get_cfg()
     cfg.merge_from_file(
         model_zoo.get_config_file(
             "COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml"
         )
     )
+
     cfg.MODEL.WEIGHTS = MODEL_PATH_d2
-    cfg.MODEL.ROI_HEADS.NUM_CLASSES = 2  # change if needed
-    cfg.INPUT.MIN_SIZE_TEST = Test_Electron_Dose
-    cfg.INPUT.MAX_SIZE_TEST = Test_Electron_Dose
+    cfg.MODEL.ROI_HEADS.NUM_CLASSES = 2
+    cfg.INPUT.MIN_SIZE_TEST = Test_Image_Size
+    cfg.INPUT.MAX_SIZE_TEST = Test_Image_Size
     cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.5
-    predictor = DefaultPredictor(cfg)
-    MODEL_PATH = cfg.MODEL.WEIGHTS
 
 
+    model = build_model(cfg)
+    DetectionCheckpointer(model).load(cfg.MODEL.WEIGHTS)
 
-    model_path = MODEL_PATH
-    input_folder = test_img_folder
-    output_folder = os.path.join(TARGET_FOLDER, f"Results_{Model}-{Model_Electron_Dose}")
-    os.makedirs(output_folder, exist_ok=True)
-
-
-    image_files = glob.glob(os.path.join(input_folder, "*.jpg")) + glob.glob(os.path.join(input_folder, "*.png"))
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model.to(device)
+    model.eval()
 
 
-    for img_path in image_files:
-        used_ims = set()
-        image = cv2.imread(img_path)
-        if image is None:
-            print(f"Skipping unreadable image {img_path}")
-            continue
+    # ===============================
+    # COCO evaluation
+    # ===============================
 
-        base = os.path.splitext(os.path.basename(img_path))[0]
-        save_img = os.path.join(output_folder, f"{base}_thickness.png")
-        save_csv = os.path.join(output_folder, f"{base}_thickness.csv")
-        save_angles_csv = os.path.join(output_folder, f"{base}_angles.csv")
+    # -------------------------
+    # WARMUP
+    # -------------------------
+    for i, batch in enumerate(test_loader):
+        with torch.no_grad():
+            _ = model(batch)
+        if i == 9:   # 10 warmup iterations
+            break
 
-        # ✅ Skip already processed images
-        #if os.path.exists(save_img) and os.path.exists(save_csv):
-        #    print(f"Skipping {img_path} (already processed)")
-        #    continue
+    torch.cuda.synchronize()
 
-        image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        img_height, img_width = image_rgb.shape[:2]
+    # -------------------------
+    # TIMING
+    # -------------------------
+    starter = torch.cuda.Event(enable_timing=True)
+    ender = torch.cuda.Event(enable_timing=True)
 
-        # Run on resized image
-        outputs = predictor(image_rgb)
-        instances = outputs["instances"].to("cpu")
+    total_time = 0
+    total_images = 0
 
-        #  Skip images where YOLO found no masks
-        if len(instances) == 0:
-            print(f"Skipping {img_path} (no masks detected)")
-            continue
+    with torch.no_grad():
 
-        # Split OM & IM masks
-        masks   = instances.pred_masks.numpy()     # [N, H, W] (bool)
-        classes = instances.pred_classes.numpy()   # [N] (int)
+        for batch in test_loader:
 
-        om_mask = np.zeros((img_height, img_width), dtype=np.uint8)
-        im_mask = np.zeros((img_height, img_width), dtype=np.uint8)
+            starter.record()
 
-        om_masks, im_masks = [], []
-        
-        for i, mask in enumerate(masks):
-            # resized = cv2.resize(mask, (img_width, img_height), interpolation=cv2.INTER_NEAREST)
-            binary = (mask > 0.5).astype(np.uint8) * 255
-            if classes[i] == 1:
-                om_masks.append(binary)
-            elif classes[i] == 0:
-                im_masks.append(binary)
-                
-        for om_mask_bin in om_masks:
+            outputs = model(batch)
 
-            best_overlap, best_im_idx = 0, None
+            ender.record()
+            torch.cuda.synchronize()
 
-            for j, im_mask_bin in enumerate(im_masks):
-                if j in used_ims:
-                    continue
-                overlap = np.sum((om_mask_bin > 0) & (im_mask_bin > 0))
-                if overlap > best_overlap:
-                    best_overlap, best_im_idx = overlap, j
+            total_time += starter.elapsed_time(ender)
+            total_images += len(batch)
 
-            # 🚨 FILTER
-            if best_im_idx is None:
-                continue
+        avg_time_per_image = total_time / total_images
+        fps = 1000 / avg_time_per_image
 
-            # ✅ VALID bacterium
-            total_bacteria += 1
-            used_ims.add(best_im_idx)
+        print(f"Speed test for {Model}-{Model_Electron_Dose}:")
+        print(f"Detectron2 Avg time: {avg_time_per_image:.2f} ms")
+        """ //#####|tree_root|#####\\ """
+        df.loc[all_condition, "Avg Time_Image"] = avg_time_per_image
+        print(f"FPS: {fps:.2f}")
+        df.loc[all_condition, "FPS"] = fps
 
-            print(f"{img_path}: {total_bacteria} bacteria")
 
-        
-        # Skip if OM or IM missing
-        if not om_masks or not im_masks:
-            print(f"Skipping {img_path} (missing OM or IM contour)")
-            continue
+        #-----------------------------------------------
 
-        im_combined = np.maximum.reduce(im_masks) if im_masks else np.zeros((img_height, img_width), dtype=np.uint8)
-        om_combined = np.maximum.reduce(om_masks) if om_masks else np.zeros((img_height, img_width), dtype=np.uint8)
+        import torch
 
-        cv2.imwrite(os.path.join(output_folder, f"{base}_IM_mask.png"), im_combined)
-        cv2.imwrite(os.path.join(output_folder, f"{base}_OM_mask.png"), om_combined)
+        if torch.cuda.is_available():
+            print("GPU Name:", torch.cuda.get_device_name(0))
+            print("CUDA Version:", torch.version.cuda)
+            print("GPU Count:", torch.cuda.device_count())
+            print("Current Device:", torch.cuda.current_device())
+        else:
+            print("No CUDA GPU detected.")
 
-    print(f"\nTotal predicted bacteria with Detectron2 across all images: {total_bacteria}")
-    """ //#####|tree_root|#####\\ """
-    df.loc[all_condition, "total_bacteria"] = total_bacteria
+        if torch.cuda.is_available():
+            props = torch.cuda.get_device_properties(0)
 
-    df.to_csv(csv_path, index=False)
-    print("CSV updated successfully to Tree ✅")
+            print("Total Memory (GB):", props.total_memory / 1e9)
+            print("Multiprocessors:", props.multi_processor_count)
+            print("Compute Capability:", f"{props.major}.{props.minor}")
+
+        if torch.cuda.is_available():
+            props = torch.cuda.get_device_properties(0)
+            print(f"GPU: {torch.cuda.get_device_name(0)}")
+            print(f"Total Memory (GB): {props.total_memory / 1e9:.1f} GB")
+            print(f"CUDA Version: {torch.version.cuda}")
+            print(f"Compute Capability: {props.major}.{props.minor}")
+
+        df.to_csv(csv_path, index=False)
+        print("CSV updated successfully to Tree ✅")
+
 
     return Model, Model_Image_Size, Model_Electron_Dose, Test_Image_Size, Test_Electron_Dose, input_folder, TARGET_FOLDER, MODEL_PATH_d2, test_img_folder
 

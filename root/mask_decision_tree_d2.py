@@ -116,7 +116,7 @@ def run_model_pipeline_d2(Model, Model_Image_Size, Model_Electron_Dose, Test_Ima
         outputs = predictor(image_rgb)
         instances = outputs["instances"].to("cpu")
 
-        #  Skip images where YOLO found no masks
+        #  Skip images where model found no masks
         if len(instances) == 0:
             print(f"Skipping {img_path} (no masks detected)")
             continue
