@@ -244,4 +244,13 @@ def run_model_pipeline_s3(Model, Model_Image_Size, Model_Electron_Dose, Test_Ima
     df.to_csv(csv_path, index=False)
     print("CSV updated successfully to Tree ✅")
 
+    # CLEAR MEMORY
+    import gc
+    import torch
+
+    del batch, output, results, dp, pil_image, image
+    gc.collect()
+    torch.cuda.empty_cache()
+    torch.cuda.ipc_collect()
+
     return Model, Model_Image_Size, Model_Electron_Dose, Test_Image_Size, Test_Electron_Dose, input_folder, TARGET_FOLDER, MODEL_PATH_s3, test_img_folder, test_ann_path
