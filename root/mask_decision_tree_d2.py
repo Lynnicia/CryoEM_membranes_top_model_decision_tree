@@ -76,6 +76,7 @@ def run_model_pipeline_d2(Model, Model_Image_Size, Model_Electron_Dose, Test_Ima
     cfg.MODEL.ROI_HEADS.NUM_CLASSES = 2  # change if needed
     cfg.INPUT.MIN_SIZE_TEST = 1024
     cfg.INPUT.MAX_SIZE_TEST = 1024
+    cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.5
     predictor = DefaultPredictor(cfg)
     MODEL_PATH = cfg.MODEL.WEIGHTS
 
