@@ -93,17 +93,33 @@ def run_model_speed_pipeline_d2(Model, Model_Image_Size, Model_Electron_Dose, Te
     # ===============================
 
     for batch in test_loader:
-    print(batch)
-    break
+        print(batch)
+        break
+
+    for images in test_loader:
+        print(images.shape)
+        break
 
     # -------------------------
     # WARMUP
     # -------------------------
-    for i, batch in enumerate(test_loader):
+    for i, images in enumerate(test_loader):
+
+        batch = []
+
+        for img in images:
+            batch.append({
+                "image": img.to(device),
+                "height": img.shape[1],
+                "width": img.shape[2]
+            })
+
         with torch.no_grad():
             _ = model(batch)
-        if i == 9:   # 10 warmup iterations
+
+        if i == 9:
             break
+
 
     torch.cuda.synchronize()
 
@@ -119,7 +135,16 @@ def run_model_speed_pipeline_d2(Model, Model_Image_Size, Model_Electron_Dose, Te
 
     with torch.no_grad():
 
-        for batch in test_loader:
+        for images in test_loader:
+
+            batch = []
+
+            for img in images:
+                batch.append({
+                    "image": img.to(device),
+                    "height": img.shape[1],
+                    "width": img.shape[2]
+                })
 
             starter.record()
 
@@ -130,6 +155,8 @@ def run_model_speed_pipeline_d2(Model, Model_Image_Size, Model_Electron_Dose, Te
 
             total_time += starter.elapsed_time(ender)
             total_images += len(batch)
+
+
 
     avg_time_per_image = total_time / total_images
     fps = 1000 / avg_time_per_image
