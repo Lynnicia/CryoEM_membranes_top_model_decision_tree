@@ -102,7 +102,7 @@ def test_image_LD_640():
         f"/content/CryoEM_membranes_top_model_decision_tree/Custom_Datasets/LD/COCO/test/640"
         )
 
-    return test_loader, test_image_dir, test_images_yv11, test_images_y26, test_img_folder, test_ann_path, test_images_orig_folder
+    return test_loader, test_image_dir, test_images_yv11, test_images_y26, test_img_folder, test_ann_path, test_images_orig_folder, test_annotation_file
 
 
 def test_image_LD_1024():
@@ -132,7 +132,7 @@ def test_image_LD_1024():
         f"/content/CryoEM_membranes_top_model_decision_tree/Custom_Datasets/LD/COCO/test/1024"
         )
 
-    return test_loader, test_image_dir, test_images_yv11, test_images_y26, test_img_folder, test_ann_path, test_images_orig_folder
+    return test_loader, test_image_dir, test_images_yv11, test_images_y26, test_img_folder, test_ann_path, test_images_orig_folder, test_annotation_file
 
 
 TEST_MAP = {
