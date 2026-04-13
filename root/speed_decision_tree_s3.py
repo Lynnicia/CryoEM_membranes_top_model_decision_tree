@@ -266,6 +266,7 @@ def run_model_speed_pipeline_s3(Model, Model_Image_Size, Model_Electron_Dose, Te
 
     avg_time_per_image = total_time / len(pil_images)
     fps = 1000 / avg_time_per_image
+    print(f"Speed test for {Model}-{Model_Electron_Dose}:")
     print(f"Avg time: {avg_time_per_image:.2f} ms")
     """ //#####|tree_root|#####\\ """
     df.loc[all_condition, "Avg Time_Image"] = avg_time_per_image
@@ -305,7 +306,7 @@ def run_model_speed_pipeline_s3(Model, Model_Image_Size, Model_Electron_Dose, Te
     # CLEAR MEMORY
     import gc
     import torch
-    del batch, output, results, dp, pil_image, image
+    del output, results, dp, pil_image, image
     gc.collect()
     torch.cuda.empty_cache()
     torch.cuda.ipc_collect()
