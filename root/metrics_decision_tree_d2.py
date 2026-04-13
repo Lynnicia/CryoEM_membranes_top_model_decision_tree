@@ -23,6 +23,7 @@ def run_model_metrics_pipeline_d2(Model, Model_Image_Size, Model_Electron_Dose, 
     from detectron2.checkpoint import DetectionCheckpointer
     from detectron2.modeling import build_model
     from detectron2.data import DatasetCatalog
+    from detectron2.data.datasets import register_coco_instances
     import cv2
     from pycocotools import mask as mask_utils
     from sklearn.metrics import average_precision_score
@@ -77,6 +78,23 @@ def run_model_metrics_pipeline_d2(Model, Model_Image_Size, Model_Electron_Dose, 
     # =========================
     # Main loop for folder
     # =========================
+
+
+    def reregister_coco(name, json_file, image_root):
+        if name in DatasetCatalog.list():
+            DatasetCatalog.remove(name)
+            MetadataCatalog.remove(name)
+
+        register_coco_instances(name, {}, json_file, image_root)
+
+    for t in ["test"]:
+        reregister_coco(
+            f"bacteria_{Test_Electron_Dose}_OMIM_{Test_Image_Size}_test",
+            f"/content/CryoEM_membranes_top_model_decision_tree/Datasets/{Test_Electron_Dose}/COCO/test/{Test_Image_Size}/_filt_annotations.coco.json",
+            f"/content/CryoEM_membranes_top_model_decision_tree/Datasets/{Test_Electron_Dose}/COCO/test/{Test_Image_Size}"
+        )
+
+
 
     # Create predictor
     cfg = get_cfg()
@@ -400,11 +418,11 @@ def run_model_metrics_pipeline_d2(Model, Model_Image_Size, Model_Electron_Dose, 
 
     dataset_name = f"bacteria_{Test_Electron_Dose}_OMIM_{Test_Image_Size}_test"
 
-    d2_test_loader = build_detection_test_loader(cfg, "my_dataset")d2_test_loader = build_detection_test_loader(cfg, "my_dataset")
+    d2_test_loader = build_detection_test_loader(cfg, dataset_name)
 
 
     with torch.no_grad():
-        for batch in test_loader:
+        for batch in d2_test_loader:
 
             outputs = model(batch)
 
@@ -515,9 +533,9 @@ def run_model_metrics_pipeline_d2(Model, Model_Image_Size, Model_Electron_Dose, 
         output_dir="./output"
     )
 
-    d2_test_loader = build_detection_test_loader(cfg, "my_dataset")
+    d2_test_loader = build_detection_test_loader(cfg, dataset_name)
 
-    results = inference_on_dataset(model, test_loader, evaluator)
+    results = inference_on_dataset(model, d2_test_loader, evaluator)
 
     with torch.no_grad():
         for d in dataset:
