@@ -25,24 +25,26 @@ This will output metrics for the class of interest. This has been hard-coded to 
 ### Repository Contents
 #### Datasets 
 The low dose and ultralow dose test images of *Pantoea* sp. YR343 and annotations are located within this folder in both COCO and YOLO formats (Roboflow). The images have also been resized to 640 x 640 and 1024 x 1024. When loading in custom datasets, please use the exact folder format, `_annotations.coco.json` text and annotation class order of 0 = inner membrane (IM) and 1 = outer membrane (OM). In addition, please resize your images to either 640 x 640 or 1024 x 1024 before proceeding. 
+#### Masks (generated in Notebook)
+Output IM and OM binary masks with all models based on user preference for test image size and test electron dose. 
 #### Drop
 Test image python code is located in this folder. If using a custom dataset, be sure to resize your images and refactor your dataset path to exactly match this Dataset folder setup (i.e. resize your images to 1024 x 1024, then change your path from [your_folder/test] and [your_folder/test/_annotations.coco.json] to [/content/CryoEM_membranes_top_model_decision_tree/Datasets/LD/COCO/test/1024] and [/content/CryoEM_membranes_top_model_decision_tree/Datasets/LD/COCO/test/1024/_annotations.coco.json]). 
 #### Misc
 Example Detectron2 and SAM3 segmentation model training steps. Please use your own data and Hugging Face token where applicable as these training steps are for demonstrative purposes only. For U-Net, Refer to https://github.com/Sireesiru/Semantic-Segmentation-of-bacterial-cell-envelope-using-U-Nets to be forked to a more in-depth example of U-Net segmentation model training steps. Refer to https://github.com/Sireesiru/Cryo-TEM-Ultrastructures for steps on how to train on a custom dataset, check README.md. Demonstrations for YOLOv11 and YOLO26 segmentation model training can be found at https://github.com/ultralytics/ultralytics.
+#### Root
+Mask and metrics screening python code. Tools to generate masks, metrics and speed tests for test images with YOLOv11, YOLO26, U-Net, Detectron2 and SAM3 fine-tuned pre-trained models. 
 #### Seed
 Python code for top models and model architectures. 
 #### |  Models
-All best model checkpoints are located in this subfolder. Placeholder python code to load in all model checkpoints. A placeholder has been added for models too large to add to this repository. Please run the placeholder routine in the misc folder to load in all best model chekpoints. All models will be either loaded from the GitHub releases (YOLOv11, YOLO26, U-Net and Detectron2) or from Hugging Face (SAM3). 
-#### Root
-Mask and metrics screening python code. 
+All best model checkpoints are located in this subfolder. Placeholder python code to load in all model checkpoints. A placeholder has been added for models too large to add to this repository. Please run the placeholder routine in the misc folder to load in all best model chekpoints. All models will be either loaded from the GitHub releases (YOLOv11, YOLO26, U-Net and Detectron2) or from Hugging Face (SAM3). . 
 #### Top
-Python code to sort top_model_table.csv and output a subset table. 
+Python code to sort top_model_table.csv and output a top 5 (or top #) subset table based on metrics of interest. 
 #### top_model_decision_tree.ipynb
 Main Notebook to run the Top Model Decision Tree. This notebook is only compatible with Google Colab. Open this notebook in Google Colab and git clone the remaining folder components to use the framework.
 #### top_model_table.csv
-Example .csv output from the Top Model Decision Tree.  
-
-
+Blank .csv file that will populate with metrics based on test image inferences. 
+#### example_top_model_table.csv
+Example .csv output from the Top Model Decision Tree based on example LD and ULD test images.
 
 ### Future Outlook
 This framework presented in this GitHub is not limited to only bacterial membrane segmentation. Please feel free to restructure the model architectures to adapt to your fine-tuned pre-trained model checkpoints to custom datasets. 
