@@ -7,15 +7,7 @@ if __name__ == "__main__":
     main()
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-from detectron2.config import get_cfg
-from detectron2 import model_zoo
-from detectron2.engine import DefaultPredictor
-from detectron2.modeling import build_model
-from detectron2.checkpoint import DetectionCheckpointer
-from detectron2.data import DatasetCatalog, MetadataCatalog
-from pycocotools import mask as mask_utils
-import torch
-from sklearn.metrics import precision_recall_curve
+
 
 # Detectron2
 def run_model_metrics_pipeline_d2(Model, Model_Image_Size, Model_Electron_Dose, Test_Image_Size, Test_Electron_Dose, input_folder, TARGET_FOLDER, MODEL_PATH_d2, test_img_folder, test_loader):
@@ -406,21 +398,9 @@ def run_model_metrics_pipeline_d2(Model, Model_Image_Size, Model_Electron_Dose, 
     rec_om_scores = []
     f1_om_scores = []
 
-    def decode_coco_segmentation(ann, height, width):
-        seg = ann["segmentation"]
+    dataset_name = f"bacteria_{Test_Electron_Dose}_OMIM_{Test_Image_Size}_test"
 
-        if isinstance(seg, list):
-            rles = mask_utils.frPyObjects(seg, height, width)
-            rle = mask_utils.merge(rles)
-            mask = mask_utils.decode(rle)
-
-        elif isinstance(seg, dict):
-            mask = mask_utils.decode(seg)
-
-        else:
-            raise ValueError(f"Unknown segmentation format: {type(seg)}")
-
-        return (mask > 0).astype(np.uint8)
+    d2_test_loader = build_detection_test_loader(cfg, "my_dataset")d2_test_loader = build_detection_test_loader(cfg, "my_dataset")
 
 
     with torch.no_grad():
@@ -526,7 +506,7 @@ def run_model_metrics_pipeline_d2(Model, Model_Image_Size, Model_Electron_Dose, 
     all_true     = {0: [], 1: []}
     all_probs    = {0: [], 1: []}
 
-    dataset_name = "bacteria_ld_omim_1024_archive_valid"
+    dataset_name = f"bacteria_{Test_Electron_Dose}_OMIM_{Test_Image_Size}_test"
 
     evaluator = COCOEvaluator(
         dataset_name,
@@ -535,7 +515,7 @@ def run_model_metrics_pipeline_d2(Model, Model_Image_Size, Model_Electron_Dose, 
         output_dir="./output"
     )
 
-    test_loader = build_detection_test_loader(cfg, dataset_name)
+    d2_test_loader = build_detection_test_loader(cfg, "my_dataset")
 
     results = inference_on_dataset(model, test_loader, evaluator)
 
