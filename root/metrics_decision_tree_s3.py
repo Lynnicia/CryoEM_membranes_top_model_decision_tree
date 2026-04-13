@@ -278,3 +278,392 @@ def run_model_metrics_pipeline_s3(Model, Model_Image_Size, Model_Electron_Dose, 
     # METRICS
     print(f"Metrics for {Model}-{Model_Electron_Dose}:")
 
+    #-------------------------------------------------------------------------------
+    #-------------------------------------------------------------------------------
+    #-------------------------------------------------------------------------------
+
+
+
+    with open(test_ann_path) as f:
+        test_ann = json.load(f)
+
+    cat_name_to_id = {c["name"]: c["id"] for c in test_ann["categories"]}
+    prompt_to_ch   = {"IM": 0, "OM": 1}
+    coco_gt        = COCO(test_ann_path)
+
+    # ── Collect predictions ───────────────────────────────────────────────────
+    predictions  = []   # for COCO instance eval
+    all_true     = {0: [], 1: []}  # for pixel eval
+    all_probs    = {0: [], 1: []}
+
+    for img_info in test_ann["images"]:
+        img_path  = os.path.join(test_img_folder, img_info["file_name"])
+        pil_image = Image.open(img_path).convert("RGB")
+        orig_width, orig_height = pil_image.size
+
+        # GT masks
+        gt = {0: np.zeros((orig_height, orig_width), dtype=np.uint8),
+              1: np.zeros((orig_height, orig_width), dtype=np.uint8)}
+        for ann in coco_gt.loadAnns(coco_gt.getAnnIds(imgIds=img_info["id"])):
+            cat_name = next(c["name"] for c in val_ann["categories"] if c["id"] == ann["category_id"])
+            if cat_name not in prompt_to_ch:
+                continue
+            ch = prompt_to_ch[cat_name]
+            m = coco_gt.annToMask(ann)
+            if m.shape != (orig_height, orig_width):
+                m = cv2.resize(m, (orig_width, orig_height), interpolation=cv2.INTER_NEAREST)
+            gt[ch] = np.maximum(gt[ch], m)
+
+        # SAM3 inference
+        with torch.autocast("cuda", dtype=torch.bfloat16):
+            with torch.no_grad():
+                dp, ids = make_datapoint(pil_image, ["IM", "OM"])
+                dp = transform(dp)
+                batch = collate([dp], dict_key="dummy")["dummy"]
+                batch = copy_data_to_device(batch, device, non_blocking=True)
+                output = model(batch)
+                pp = PostProcessImage(
+                    max_dets_per_img=-1, iou_type="segm",
+                    use_original_sizes_box=True, use_original_sizes_mask=True,
+                    convert_mask_to_rle=False, detection_threshold=0.05, to_cpu=True,
+                )
+                results = pp.process_results(output, batch.find_metadatas)
+        del batch, output
+        torch.cuda.empty_cache()
+
+        # Build prob maps + COCO predictions
+        for prompt, ch in prompt_to_ch.items():
+            cat_id = cat_name_to_id[prompt]
+            prob_map = np.zeros((orig_height, orig_width), dtype=np.float32)
+
+            for mask, score in zip(results[ids[prompt]]["masks"], results[ids[prompt]]["scores"]):
+                m = mask.numpy().squeeze().astype(np.float32)
+                if m.shape != (orig_height, orig_width):
+                    m = cv2.resize(m, (orig_width, orig_height), interpolation=cv2.INTER_NEAREST)
+                prob_map = np.maximum(prob_map, m * float(score))
+
+                # Add to COCO predictions
+                binary = (m > 0.5).astype(np.uint8)
+                rle = mask_utils.encode(np.asfortranarray(binary))
+                rle["counts"] = rle["counts"].decode("utf-8")
+                predictions.append({
+                    "image_id":    img_info["id"],
+                    "category_id": cat_id,
+                    "segmentation": rle,
+                    "score":       float(score),
+                })
+
+            all_true[ch].append(gt[ch].ravel())
+            all_probs[ch].append(prob_map.ravel())
+
+        print(f"  {img_info['file_name']} done")
+
+    # Concatenate pixel arrays
+    for ch in [0, 1]:
+        all_true[ch]  = np.concatenate(all_true[ch])
+        all_probs[ch] = np.concatenate(all_probs[ch])
+
+    # ── COCO instance eval @IoU50 ─────────────────────────────────────────────
+    coco_dt   = coco_gt.loadRes(predictions)
+    coco_eval = COCOeval(coco_gt, coco_dt, "segm")
+    coco_eval.evaluate()
+    coco_eval.accumulate()
+    coco_eval.summarize()
+
+    # Extract per-class AP@IoU50
+    coco_ap50 = {}
+    for cat_name, cat_id in cat_name_to_id.items():
+        if cat_name not in prompt_to_ch:
+            continue
+        cat_idx = coco_eval.params.catIds.index(cat_id)
+        coco_ap50[cat_name] = round(float(coco_eval.eval["precision"][0, :, cat_idx, 0, 2].mean()), 3)
+    im_idx  = coco_eval.params.catIds.index(cat_name_to_id["IM"])
+    om_idx  = coco_eval.params.catIds.index(cat_name_to_id["OM"])
+    coco_ap50["all"] = round(float(
+        np.mean([
+            coco_eval.eval["precision"][0, :, im_idx, 0, 2].mean(),
+            coco_eval.eval["precision"][0, :, om_idx, 0, 2].mean(),
+        ])
+    ), 3)
+
+    # ── Pixel metrics @best threshold ────────────────────────────────────────
+    def best_threshold(y_true, y_prob):
+        precision, recall, thresholds = precision_recall_curve(y_true, y_prob)
+        f1 = 2 * precision * recall / (precision + recall + 1e-8)
+        return thresholds[np.argmax(f1[:-1])]
+
+    def compute_metrics_at_best_f1(all_true, all_probs):
+        results = {}
+        labels = {0: "IM", 1: "OM"}
+
+        for ch in [0, 1]:
+            y_true = all_true[ch]
+            y_prob = all_probs[ch]
+            thresh = best_threshold(y_true, y_prob)
+            y_pred = (y_prob >= thresh).astype(np.uint8)
+
+            tp = np.sum((y_pred == 1) & (y_true == 1))
+            fp = np.sum((y_pred == 1) & (y_true == 0))
+            fn = np.sum((y_pred == 0) & (y_true == 1))
+
+            precision = tp / (tp + fp + 1e-8)
+            recall    = tp / (tp + fn + 1e-8)
+            f1        = 2 * precision * recall / (precision + recall + 1e-8)
+            auprc     = average_precision_score(y_true, y_prob)
+
+            results[labels[ch]] = {
+                "Mask Precision":    (precision),
+                "Mask Recall":       (recall),
+                "Pixel AUPRC":       (auprc),
+                "Instance mAP50":    coco_ap50[labels[ch]],
+                "F1 Score":          (f1),
+                "Best Threshold":    (float(thresh)),
+            }
+
+        y_true_all = np.concatenate([all_true[0], all_true[1]])
+        y_prob_all  = np.concatenate([all_probs[0], all_probs[1]])
+        thresh = best_threshold(y_true_all, y_prob_all)
+        y_pred_all = (y_prob_all >= thresh).astype(np.uint8)
+
+        tp = np.sum((y_pred_all == 1) & (y_true_all == 1))
+        fp = np.sum((y_pred_all == 1) & (y_true_all == 0))
+        fn = np.sum((y_pred_all == 0) & (y_true_all == 1))
+
+        precision = tp / (tp + fp + 1e-8)
+        recall    = tp / (tp + fn + 1e-8)
+        f1        = 2 * precision * recall / (precision + recall + 1e-8)
+        auprc     = average_precision_score(y_true_all, y_prob_all)
+
+        results["all"] = {
+            "Mask Precision":    (precision),
+            "Mask Recall":       (recall),
+            "Pixel AUPRC":       (auprc),
+            "Instance mAP50":    coco_ap50["all"],
+            "F1 Score":          (f1),
+            "Best Threshold":    (float(thresh)),
+        }
+
+        return pd.DataFrame(results).T
+
+    metrics_df = compute_metrics_at_best_f1(all_true, all_probs)
+    print("\n── SAM3 Validation Metrics ──")
+    print(metrics_df.to_string())
+
+
+
+    """ //#####|tree_root|#####\\ """
+    df.loc[all_condition, "O.Mask_Precision"] = metrics_df.loc["all", "Mask Precision"]
+    df.loc[all_condition, "O.Mask_Recall"]    = metrics_df.loc["all", "Mask Recall"]
+    df.loc[all_condition, "O.mAP50"]          = metrics_df.loc["all", "Instance mAP50"]
+    df.loc[all_condition, "O.F1-Score"]       = metrics_df.loc["all", "F1 Score"]
+    df.loc[im_condition, "O.Mask_Precision"] = metrics_df.loc["IM", "Mask Precision"]
+    df.loc[im_condition, "O.Mask_Recall"]    = metrics_df.loc["IM", "Mask Recall"]
+    df.loc[im_condition, "O.mAP50"]          = metrics_df.loc["IM", "Instance mAP50"]
+    df.loc[im_condition, "O.F1-Score"]       = metrics_df.loc["IM", "F1 Score"]
+    df.loc[om_condition, "O.Mask_Precision"] = metrics_df.loc["OM", "Mask Precision"]
+    df.loc[om_condition, "O.Mask_Recall"]    = metrics_df.loc["OM", "Mask Recall"]
+    df.loc[om_condition, "O.mAP50"]          = metrics_df.loc["OM", "Instance mAP50"]
+    df.loc[om_condition, "O.F1-Score"]       = metrics_df.loc["OM", "F1 Score"]
+
+
+
+    #-------------------------------------------------------------------------------
+    #-------------------------------------------------------------------------------
+    #-------------------------------------------------------------------------------
+
+
+    df.to_csv(csv_path, index=False)
+    print("CSV updated successfully to Tree ✅")
+
+    # METRICS - U-Net
+
+    #-------------------------------------------------------------------------------
+    #-------------------------------------------------------------------------------
+    #-------------------------------------------------------------------------------
+
+    # overall pixel segmentation metrics
+
+
+    with open(test_ann_path) as f:
+        test_ann = json.load(f)
+
+    coco_gt = COCO(test_ann_path)
+    cat_name_to_id = {c["name"]: c["id"] for c in test_ann["categories"]}
+    prompt_to_ch   = {"IM": 0, "OM": 1}
+
+    # Per-image accumulators (mirrors U-Net loop)
+    all_true  = {0: [], 1: []}
+    all_probs = {0: [], 1: []}
+
+    iou_scores, dice_scores, precisions, recalls, f1s = [], [], [], [], []
+    iou_im_scores,  dice_im_scores,  prec_im_scores,  rec_im_scores,  f1_im_scores  = [], [], [], [], []
+    iou_om_scores,  dice_om_scores,  prec_om_scores,  rec_om_scores,  f1_om_scores  = [], [], [], [], []
+
+    THRESHOLD = 0.5
+
+    for img_info in test_ann["images"]:
+        img_path  = os.path.join(test_img_folder, img_info["file_name"])
+        pil_image = Image.open(img_path).convert("RGB")
+        orig_width, orig_height = pil_image.size
+
+        # ── Ground truth masks from COCO ──
+        gt = {0: np.zeros((orig_height, orig_width), dtype=np.uint8),
+              1: np.zeros((orig_height, orig_width), dtype=np.uint8)}
+        for ann in coco_gt.loadAnns(coco_gt.getAnnIds(imgIds=img_info["id"])):
+            cat_name = next(c["name"] for c in test_ann["categories"] if c["id"] == ann["category_id"])
+            if cat_name not in prompt_to_ch:
+                continue
+            ch = prompt_to_ch[cat_name]
+            m = coco_gt.annToMask(ann)
+            if m.shape != (orig_height, orig_width):
+                m = cv2.resize(m, (orig_width, orig_height), interpolation=cv2.INTER_NEAREST)
+            gt[ch] = np.maximum(gt[ch], m)
+
+        # ── SAM3 inference ──
+        with torch.autocast("cuda", dtype=torch.bfloat16):
+            with torch.inference_mode():
+                dp, ids = make_datapoint(pil_image, ["IM", "OM"])
+                dp = transform(dp)
+                batch = collate([dp], dict_key="dummy")["dummy"]
+                batch = copy_data_to_device(batch, device, non_blocking=True)
+                output = model(batch)
+                pp = PostProcessImage(
+                    max_dets_per_img=-1, iou_type="segm",
+                    use_original_sizes_box=True, use_original_sizes_mask=True,
+                    convert_mask_to_rle=False, detection_threshold=0.05, to_cpu=True,
+                )
+                results = pp.process_results(output, batch.find_metadatas)
+
+        # ── Build prob maps (mirrors probs[b, ch]) ──
+        prob = {}
+        for prompt, ch in prompt_to_ch.items():
+            p = np.zeros((orig_height, orig_width), dtype=np.float32)
+            for mask, score in zip(results[ids[prompt]]["masks"], results[ids[prompt]]["scores"]):
+                m = mask.numpy().squeeze().astype(np.float32)
+                if m.shape != (orig_height, orig_width):
+                    m = cv2.resize(m, (orig_width, orig_height), interpolation=cv2.INTER_NEAREST)
+                p = np.maximum(p, m * float(score))
+            prob[ch] = p
+            all_true[ch].append(gt[ch].ravel())
+            all_probs[ch].append(p.ravel())
+
+        # ── Compute per-image metrics (mirrors U-Net batch loop) ──
+        pred_mask = np.stack([prob[0] > THRESHOLD, prob[1] > THRESHOLD]).astype(np.float32)  # [2,H,W]
+        true_mask = np.stack([gt[0] > 0,           gt[1] > 0          ]).astype(np.float32)  # [2,H,W]
+
+        iou_scores.append(calculate_iou(pred_mask, true_mask))
+        dice_scores.append(calculate_dice(pred_mask, true_mask))
+        p, r, f = calculate_precision_recall_f1(pred_mask, true_mask)
+        precisions.append(p); recalls.append(r); f1s.append(f)
+
+        # Per-class
+        for ch, (iou_list, dice_list, prec_list, rec_list, f1_list) in enumerate([
+            (iou_im_scores, dice_im_scores, prec_im_scores, rec_im_scores, f1_im_scores),
+            (iou_om_scores, dice_om_scores, prec_om_scores, rec_om_scores, f1_om_scores),
+        ]):
+            pm = np.stack([pred_mask[ch]])
+            tm = np.stack([true_mask[ch]])
+            iou_list.append(calculate_iou(pm, tm))
+            dice_list.append(calculate_dice(pm, tm))
+            p, r, f = calculate_precision_recall_f1(pm, tm)
+            prec_list.append(p); rec_list.append(r); f1_list.append(f)
+
+        print(f"  {img_info['file_name']} done")
+
+    # Concatenate for PR/AUPRC
+    for ch in [0, 1]:
+        all_true[ch]  = np.concatenate(all_true[ch])
+        all_probs[ch] = np.concatenate(all_probs[ch])
+
+    # ── Print results (identical to U-Net output block) ────────────────────────
+    print("\n=== Overall Pixel Segmentation Metrics ===\n")
+    print("Mean IoU:",        round(np.mean(iou_scores),3))
+    print("Mean Dice:",       round(np.mean(dice_scores),3))
+    print("Mean Precision:",  round(np.mean(precisions),3))
+    print("Mean Recall:",     round(np.mean(recalls),3))
+    print("Mean F1:",         round(np.mean(f1s),3))
+
+    """ //#####|tree_root|#####\\ """
+    df.loc[all_condition, "P.IOU"] = np.mean(iou_scores)
+    """ //#####|tree_root|#####\\ """
+    df.loc[all_condition, "P.Dice"] = np.mean(dice_scores)
+    """ //#####|tree_root|#####\\ """
+    df.loc[all_condition, "P.Mask_Precision"] = np.mean(precisions)
+    """ //#####|tree_root|#####\\ """
+    df.loc[all_condition, "P.Mask_Recall"] = np.mean(recalls)
+    """ //#####|tree_root|#####\\ """
+    df.loc[all_condition, "P.F1-Score"] = np.mean(f1s)
+
+
+    auprcs = []
+    for c in range(2):
+        y_true = all_true[c]
+        y_prob = all_probs[c]
+        precision, recall, _ = precision_recall_curve(y_true, y_prob)
+        auprc = auc(recall, precision)
+        auprcs.append(auprc)
+    print("Mean AUPRC:", round(np.mean(auprcs),3))
+    """ //#####|tree_root|#####\\ """
+    df.loc[all_condition, "P.AUPRC"] = np.mean(auprcs)
+
+
+    print("\n=== Per-Class Pixel Segmentation Metrics ===\n")
+    print("IM IoU:",       round(np.mean(iou_im_scores),3))
+    """ //#####|tree_root|#####\\ """
+    df.loc[im_condition, "P.IOU"] = np.mean(iou_im_scores)
+    print("IM Dice:",      round(np.mean(dice_im_scores),3))
+    """ //#####|tree_root|#####\\ """
+    df.loc[im_condition, "P.Dice"] = np.mean(dice_im_scores)
+    print("IM Precision:", round(np.mean(prec_im_scores),3))
+    """ //#####|tree_root|#####\\ """
+    df.loc[im_condition, "P.Mask_Precision"] = np.mean(prec_im_scores)
+    print("IM Recall:",    round(np.mean(rec_im_scores),3))
+    """ //#####|tree_root|#####\\ """
+    df.loc[im_condition, "P.Mask_Recall"] = np.mean(rec_im_scores)
+    print("IM F1:",        round(np.mean(f1_im_scores),3))
+    """ //#####|tree_root|#####\\ """
+    df.loc[im_condition, "P.F1-Score"] = np.mean(f1_im_scores)
+
+    print("\nOM IoU:",       round(np.mean(iou_om_scores),3))
+    """ //#####|tree_root|#####\\ """
+    df.loc[om_condition, "P.IOU"] = np.mean(iou_om_scores)
+    print("OM Dice:",      round(np.mean(dice_om_scores),3))
+    """ //#####|tree_root|#####\\ """
+    df.loc[om_condition, "P.Dice"] = np.mean(dice_om_scores)
+    print("OM Precision:", round(np.mean(prec_om_scores),3))
+    """ //#####|tree_root|#####\\ """
+    df.loc[om_condition, "P.Mask_Precision"] = np.mean(prec_om_scores)
+    print("OM Recall:",    round(np.mean(rec_om_scores),3))
+    """ //#####|tree_root|#####\\ """
+    df.loc[om_condition, "P.Mask_Recall"] = np.mean(rec_om_scores)
+    print("OM F1:",        round(np.mean(f1_om_scores),3))
+    """ //#####|tree_root|#####\\ """
+    df.loc[om_condition, "P.F1-Score"] = np.mean(f1_om_scores)
+
+
+    for c in range(2):
+        num_class_condition = (
+            (df["Model"] == Model) &
+            (df["Model_Electron_Dose"] == Model_Electron_Dose) &
+            (df["Model_Image_Size"] == Model_Image_Size) &
+            (df["Test_Electron_Dose"] == Test_Electron_Dose) &
+            (df["Test_Image_Size"] == Test_Image_Size) &
+            (df["Channel"].fillna(-1).astype(int) == c)
+        )
+        y_true = all_true[c]
+        y_prob = all_probs[c]
+        precision, recall, _ = precision_recall_curve(y_true, y_prob)
+        auprc = auc(recall, precision)
+        print(f"Class {c} AUPRC: {auprc:.4f}")
+        """ //#####|tree_root|#####\\ """
+        df.loc[num_class_condition, "P.AUPRC"] = auprc
+
+    #-------------------------------------------------------------------------------
+    #-------------------------------------------------------------------------------
+    #-------------------------------------------------------------------------------
+
+
+    df.to_csv(csv_path, index=False)
+    print("CSV updated successfully to Tree ✅")
+
+    return Model, Model_Image_Size, Model_Electron_Dose, Test_Image_Size, Test_Electron_Dose, input_folder, TARGET_FOLDER, MODEL_PATH_s3, test_img_folder, test_ann_path
