@@ -12,8 +12,10 @@ from detectron2 import model_zoo
 from detectron2.engine import DefaultPredictor
 from detectron2.modeling import build_model
 from detectron2.checkpoint import DetectionCheckpointer
+from detectron2.data import DatasetCatalog, MetadataCatalog
+from pycocotools import mask as mask_utils
 import torch
-
+from sklearn.metrics import precision_recall_curve
 
 # Detectron2
 def run_model_metrics_pipeline_d2(Model, Model_Image_Size, Model_Electron_Dose, Test_Image_Size, Test_Electron_Dose, input_folder, TARGET_FOLDER, MODEL_PATH_d2, test_img_folder, test_loader):
@@ -103,6 +105,13 @@ def run_model_metrics_pipeline_d2(Model, Model_Image_Size, Model_Electron_Dose, 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
     model.eval()
+
+    dataset_name = f"bacteria_{Test_Electron_Dose}_OMIM_{Test_Image_Size}_test"
+
+    bacteria_metadata = MetadataCatalog.get(dataset_name)
+    bacteria_metadata.thing_classes = ["IM", "OM"]
+    dataset = DatasetCatalog.get(dataset_name)
+    dataset_dicts = DatasetCatalog.get(dataset_name)
 
     classes = [0, 1]
     all_true     = {0: [], 1: []}
