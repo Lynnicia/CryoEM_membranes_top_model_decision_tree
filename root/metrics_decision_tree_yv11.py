@@ -8,6 +8,7 @@ if __name__ == "__main__":
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+
 import pandas as pd
 from ultralytics import YOLO
 import numpy as np
@@ -22,6 +23,7 @@ def run_model_metrics_pipeline_yv11(Model, Model_Image_Size, Model_Electron_Dose
     MODEL_PATH = MODEL_PATH_yv11
     model = YOLO(MODEL_PATH)
     test_images = test_images_yv11
+    TARGET_SIZE = Test_Image_Size
 
 
     csv_path = "/content/CryoEM_membranes_top_model_decision_tree/top_model_table.csv"
@@ -208,7 +210,7 @@ def run_model_metrics_pipeline_yv11(Model, Model_Image_Size, Model_Electron_Dose
 
 
     metrics = model.val(
-        data=f"/content/CryoEM_membranes_top_model_decision_tree/Datasets/{Test_Electron_Dose}/YOLO/test/{Test_Electron_Dose}_test.yaml",
+        data=f"/content/CryoEM_membranes_top_model_decision_tree/Datasets/{Test_Electron_Dose}/YOLO/{Test_Electron_Dose}_test.yaml",
         split="test",     # 👈 evaluate on test set
         imgsz=TARGET_SIZE
     )
