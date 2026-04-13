@@ -20,6 +20,7 @@ from sklearn.metrics import precision_recall_curve
 # Detectron2
 def run_model_metrics_pipeline_d2(Model, Model_Image_Size, Model_Electron_Dose, Test_Image_Size, Test_Electron_Dose, input_folder, TARGET_FOLDER, MODEL_PATH_d2, test_img_folder, test_loader):
     import numpy as np
+    import glob
     from pathlib import Path
     import os
     import torch
@@ -367,7 +368,7 @@ def run_model_metrics_pipeline_d2(Model, Model_Image_Size, Model_Electron_Dose, 
         return pd.DataFrame(results).T
 
     metrics_df = compute_metrics_at_best_f1(all_true, all_probs)
-    print("\n── SAM3 Validation Metrics @Best F1 ──")
+    print("\n── Detectron2 Validation Metrics @Best F1 ──")
     print(metrics_df.to_string())
 
     """ //#####|tree_root|#####\\ """
