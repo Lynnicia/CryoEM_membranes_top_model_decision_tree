@@ -69,6 +69,7 @@ def run_model_metrics_pipeline_yv11(Model, Model_Image_Size, Model_Electron_Dose
 
     model = YOLO(model_path)
     image_files = glob.glob(os.path.join(input_folder, "*.jpg")) + glob.glob(os.path.join(input_folder, "*.png"))
+ 
 
     # Define YOLO txt to pixel masks
     def yolo_txt_to_mask(txt_path, image_shape, class_id=None):
