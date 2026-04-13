@@ -434,7 +434,7 @@ def run_model_metrics_pipeline_u(Model, Model_Image_Size, Model_Electron_Dose, T
 
 
     with torch.no_grad():
-        for raw_imgs, raw_masks, images, masks in test_loader:
+        for images, masks in test_loader:
             images = images.to(device)
             masks  = masks.to(device)
 
@@ -497,7 +497,7 @@ def run_model_metrics_pipeline_u(Model, Model_Image_Size, Model_Electron_Dose, T
     precisions, recalls, f1s = [], [], []
 
     with torch.no_grad():
-        for raw_imgs, raw_masks, images, masks in test_loader:
+        for images, masks in test_loader:
 
             images = images.to(device)
             masks = masks.to(device)   # shape: [B, 2, H, W]
@@ -541,7 +541,7 @@ def run_model_metrics_pipeline_u(Model, Model_Image_Size, Model_Electron_Dose, T
     all_probs = [[], []]
 
     with torch.no_grad():
-        for raw_imgs, raw_masks, images, masks in test_loader:
+        for images, masks in test_loader:
 
             images = images.to(device)
             masks = masks.to(device)      # shape [B, 2, H, W]
@@ -631,7 +631,7 @@ def run_model_metrics_pipeline_u(Model, Model_Image_Size, Model_Electron_Dose, T
     THRESHOLD = 0.5  # binarization threshold for sigmoid output
 
     with torch.no_grad():
-        for raw_imgs, raw_masks, images, masks in test_loader:
+        for images, masks in test_loader:
 
             images = images.to(device)
             masks = masks.to(device)       # [B, 2, H, W]
