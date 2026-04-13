@@ -171,7 +171,7 @@ def run_model_pipeline_d2(Model, Model_Image_Size, Model_Electron_Dose, Test_Ima
         cv2.imwrite(os.path.join(output_folder, f"{base}_IM_mask.png"), im_combined)
         cv2.imwrite(os.path.join(output_folder, f"{base}_OM_mask.png"), om_combined)
 
-    print(f"\nTotal predicted bacteria with Detectron2 across all images: {total_bacteria}")
+    print(f"\nTotal predicted bacteria with {Model}-{Model_Electron_Dose} across all images: {total_bacteria}")
     """ //#####|tree_root|#####\\ """
     df.loc[all_condition, "total_bacteria"] = total_bacteria
 

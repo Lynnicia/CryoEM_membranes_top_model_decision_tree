@@ -198,6 +198,7 @@ def run_model_metrics_pipeline_y26(Model, Model_Image_Size, Model_Electron_Dose,
 
 
     # METRICS
+    print(f"Metrics for {Model}-{Model_Electron_Dose}:")
 
     #-------------------------------------------------------------------------------
     #-------------------------------------------------------------------------------
