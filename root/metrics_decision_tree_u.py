@@ -230,7 +230,129 @@ def run_model_metrics_pipeline_u(Model, Model_Image_Size, Model_Electron_Dose, T
     input_folder = test_image_dir
 
 
+    from pycocotools.coco import COCO
+    from pycocotools import mask as coco_mask
 
+    # Load COCO annotations once outside the loop
+    coco_gt = COCO(valid_annotation_file)
+
+    # Build a lookup: filename -> image_id
+    filename_to_id = {img['file_name']: img['id'] for img in coco_gt.imgs.values()}
+
+    # Category mapping — adjust names to match your COCO JSON
+    CATEGORY_NAME_TO_ID = {cat['name']: cat['id'] for cat in coco_gt.loadCats(coco_gt.getCatIds())}
+    IM_CAT_ID = CATEGORY_NAME_TO_ID['IM']  # or whatever your class is named
+    OM_CAT_ID = CATEGORY_NAME_TO_ID['OM']
+
+    def coco_anns_to_mask(coco, image_id, cat_id, h, w):
+        """Convert COCO polygon/RLE annotations to a binary mask."""
+        ann_ids = coco.getAnnIds(imgIds=image_id, catIds=[cat_id])
+        anns = coco.loadAnns(ann_ids)
+
+        mask = np.zeros((h, w), dtype=np.uint8)
+        for ann in anns:
+            rle = coco_mask.frPyObjects(ann['segmentation'], h, w)
+            m = coco_mask.decode(rle)  # [H, W, N] or [H, W]
+            if m.ndim == 3:
+                m = m.max(axis=2)      # merge multiple polygons
+            mask
+
+
+
+    # Define IOU
+    def calculate_iou(pred_mask, true_mask):
+        """
+        Args:
+            pred_mask (np.array): shape [2, H, W] (0 or 1)
+            true_mask (np.array): shape [2, H, W] (0 or 1)
+        """
+        ious = []
+        # Loop through each channel (0=IM, 1=OM)
+        for c in range(pred_mask.shape[0]):
+            p = pred_mask[c]
+            t = true_mask[c]
+
+            # --- Your original logic applied to one channel ---
+            intersection = np.logical_and(t, p).sum()
+            union = np.logical_or(t, p).sum()
+            iou = intersection / (union + 1e-6)
+            ious.append(iou)
+        return np.mean(ious)  # Return the average across both membranes
+
+    # Define DICE
+    def calculate_dice(pred_mask, true_mask):
+        """
+        Args:
+            pred_mask (np.array): shape [2, H, W] (0 or 1)
+            true_mask (np.array): shape [2, H, W] (0 or 1)
+        """
+        dices = []
+        # Loop through each channel (0=IM, 1=OM)
+        for c in range(pred_mask.shape[0]):
+            p = pred_mask[c]
+            t = true_mask[c]
+
+            # --- Your original logic applied to one channel ---
+            intersection = np.logical_and(t, p).sum()
+            dice = (2 * intersection) / (p.sum() + t.sum() + 1e-6)
+            dices.append(dice)
+
+        return np.mean(dices)
+
+    #Define Precision_Recall_F1
+
+    def calculate_precision_recall_f1(pred_mask, true_mask):
+        """
+        Args:
+            pred_mask (np.array): shape [2, H, W] (0 or 1)
+            true_mask (np.array): shape [2, H, W] (0 or 1)
+        """
+        precisions, recalls, f1s = [], [], []
+
+        for c in range(pred_mask.shape[0]):
+            p = pred_mask[c].flatten()
+            t = true_mask[c].flatten()
+
+            # True Positive: Both are 1
+            tp = np.sum((p == 1) & (t == 1))
+            # False Positive: Predicted 1, but actually 0
+            fp = np.sum((p == 1) & (t == 0))
+            # False Negative: Predicted 0, but actually 1
+            fn = np.sum((p == 0) & (t == 1))
+
+            precision = tp / (tp + fp + 1e-6)
+            recall = tp / (tp + fn + 1e-6)
+            f1 = 2 * (precision * recall) / (precision + recall + 1e-6)
+
+            precisions.append(precision)
+            recalls.append(recall)
+            f1s.append(f1)
+
+        return np.mean(precisions), np.mean(recalls), np.mean(f1s)
+
+
+    def calculate_auprc(pred_probs, true_mask):
+        """
+        Args:
+            pred_probs (np.array): shape [C, H, W] (continuous 0–1 values)
+            true_mask (np.array): shape [C, H, W] (0 or 1)
+        """
+        auprcs = []
+
+        for ch in [0, 1]:
+
+            # Make sure arrays are 1D
+            y_true = np.array(all_true[ch]).flatten()
+            y_prob = np.array(all_probs[ch]).flatten()
+
+            precision, recall, _ = precision_recall_curve(y_true, y_prob)
+            auprc = auc(recall, precision)
+
+            auprcs.append(auprc)
+
+            print(f"Class {ch} AUPRC: {auprc:.4f}")
+
+        return np.mean(auprcs)
 
 
 
