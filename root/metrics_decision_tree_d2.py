@@ -16,6 +16,9 @@ def run_model_metrics_pipeline_d2(Model, Model_Image_Size, Model_Electron_Dose, 
     from pathlib import Path
     import os
     import torch
+    from detectron2.config import get_cfg
+    from detectron2 import model_zoo
+    from detectron2.engine import DefaultPredictor
     import matplotlib.pyplot as plt
     from detectron2.data import DatasetCatalog, build_detection_test_loader
     from detectron2.data import detection_utils as utils
