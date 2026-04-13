@@ -305,7 +305,7 @@ def run_model_metrics_pipeline_s3(Model, Model_Image_Size, Model_Electron_Dose, 
         gt = {0: np.zeros((orig_height, orig_width), dtype=np.uint8),
               1: np.zeros((orig_height, orig_width), dtype=np.uint8)}
         for ann in coco_gt.loadAnns(coco_gt.getAnnIds(imgIds=img_info["id"])):
-            cat_name = next(c["name"] for c in val_ann["categories"] if c["id"] == ann["category_id"])
+            cat_name = next(c["name"] for c in test_ann["categories"] if c["id"] == ann["category_id"])
             if cat_name not in prompt_to_ch:
                 continue
             ch = prompt_to_ch[cat_name]
@@ -325,7 +325,7 @@ def run_model_metrics_pipeline_s3(Model, Model_Image_Size, Model_Electron_Dose, 
                 pp = PostProcessImage(
                     max_dets_per_img=-1, iou_type="segm",
                     use_original_sizes_box=True, use_original_sizes_mask=True,
-                    convert_mask_to_rle=False, detection_threshold=0.05, to_cpu=True,
+                    convert_mask_to_rle=False, detection_threshold=0.001, to_cpu=True,
                 )
                 results = pp.process_results(output, batch.find_metadatas)
         del batch, output
@@ -530,7 +530,7 @@ def run_model_metrics_pipeline_s3(Model, Model_Image_Size, Model_Electron_Dose, 
                 pp = PostProcessImage(
                     max_dets_per_img=-1, iou_type="segm",
                     use_original_sizes_box=True, use_original_sizes_mask=True,
-                    convert_mask_to_rle=False, detection_threshold=0.05, to_cpu=True,
+                    convert_mask_to_rle=False, detection_threshold=0.001, to_cpu=True,
                 )
                 results = pp.process_results(output, batch.find_metadatas)
 
