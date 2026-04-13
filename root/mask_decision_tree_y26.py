@@ -17,7 +17,7 @@ import os
 from sklearn.metrics import precision_recall_curve, auc
 
 
-# YOLOv11
+# YOLO26
 def run_model_pipeline_y26(Model, Model_Image_Size, Model_Electron_Dose, Test_Image_Size, Test_Electron_Dose, input_folder, TARGET_FOLDER, MODEL_PATH_y26, test_images_y26, test_images_orig_folder):
     MODEL_PATH = MODEL_PATH_y26
     model = YOLO(MODEL_PATH)

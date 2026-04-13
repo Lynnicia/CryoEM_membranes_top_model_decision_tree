@@ -8,7 +8,6 @@ if __name__ == "__main__":
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-
 import pandas as pd
 from ultralytics import YOLO
 import numpy as np
