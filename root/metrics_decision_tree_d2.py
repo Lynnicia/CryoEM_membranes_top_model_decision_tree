@@ -19,15 +19,27 @@ from sklearn.metrics import precision_recall_curve
 
 # Detectron2
 def run_model_metrics_pipeline_d2(Model, Model_Image_Size, Model_Electron_Dose, Test_Image_Size, Test_Electron_Dose, input_folder, TARGET_FOLDER, MODEL_PATH_d2, test_img_folder, test_loader):
-    import matplotlib.pyplot as plt
     import numpy as np
-    import cv2
-    import scipy.spatial
-    import pandas as pd
+    from pathlib import Path
     import os
-    import glob
     import torch
-    
+    import matplotlib.pyplot as plt
+    from detectron2.data import DatasetCatalog, build_detection_test_loader
+    from detectron2.data import detection_utils as utils
+    from detectron2.evaluation import COCOEvaluator, inference_on_dataset
+    from detectron2.checkpoint import DetectionCheckpointer
+    from detectron2.modeling import build_model
+    from detectron2.data import DatasetCatalog
+    import cv2
+    from pycocotools import mask as mask_utils
+    from sklearn.metrics import average_precision_score
+    from sklearn.metrics import precision_recall_curve, auc
+    import torch
+    import pandas as pd
+    from detectron2.data import DatasetCatalog, MetadataCatalog
+    from detectron2.data.datasets import load_coco_json
+    import shutil
+    import json
 
 
     ### mask count
