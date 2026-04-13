@@ -262,7 +262,8 @@ def run_model_speed_pipeline_u(Model, Model_Image_Size, Model_Electron_Dose, Tes
     avg_time_per_batch = total_time / len(test_loader)
     avg_time_per_image = total_time / total_images
     fps = 1000 / avg_time_per_image
-
+    
+    print(f"Speed test for {Model}-{Model_Electron_Dose}:")
     print(f"Avg batch time per batch: {avg_time_per_batch:.2f} ms")
     print(f"Avg image time per image: {avg_time_per_image:.2f} ms")
     """ //#####|tree_root|#####\\ """

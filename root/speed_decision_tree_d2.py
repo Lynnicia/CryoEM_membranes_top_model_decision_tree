@@ -92,22 +92,21 @@ def run_model_speed_pipeline_d2(Model, Model_Image_Size, Model_Electron_Dose, Te
     # COCO evaluation
     # ===============================
 
-    for batch in test_loader:
-        print(batch)
-        break
 
-    for images in test_loader:
-        print(images.shape)
-        break
 
     # -------------------------
     # WARMUP
     # -------------------------
-    for i, images in enumerate(test_loader):
+    for i, batch_raw in enumerate(test_loader):
+
+        images = batch_raw[0]
 
         batch = []
 
         for img in images:
+
+            img = img.repeat(3,1,1)
+
             batch.append({
                 "image": img.to(device),
                 "height": img.shape[1],
@@ -135,11 +134,16 @@ def run_model_speed_pipeline_d2(Model, Model_Image_Size, Model_Electron_Dose, Te
 
     with torch.no_grad():
 
-        for images in test_loader:
+        for batch_raw in test_loader:
+
+            images = batch_raw[0]
 
             batch = []
 
             for img in images:
+
+                img = img.repeat(3,1,1)
+
                 batch.append({
                     "image": img.to(device),
                     "height": img.shape[1],
