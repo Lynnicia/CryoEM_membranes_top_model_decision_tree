@@ -306,7 +306,7 @@ def run_model_speed_pipeline_s3(Model, Model_Image_Size, Model_Electron_Dose, Te
     # CLEAR MEMORY
     import gc
     import torch
-    del output, results, dp, pil_image, image
+    del outputs, results, dp, img, batched, target_sizes_boxes, target_sizes_masks
     gc.collect()
     torch.cuda.empty_cache()
     torch.cuda.ipc_collect()
