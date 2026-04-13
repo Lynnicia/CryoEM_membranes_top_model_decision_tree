@@ -315,6 +315,9 @@ def run_model_metrics_pipeline_d2(Model, Model_Image_Size, Model_Electron_Dose, 
 
         return np.mean(auprcs)
 
+    
+    # METRICS
+    print(f"Metrics for {Model}-{Model_Electron_Dose}:")
     #-------------------------------------------------------------------------------
     #-------------------------------------------------------------------------------
     #-------------------------------------------------------------------------------
