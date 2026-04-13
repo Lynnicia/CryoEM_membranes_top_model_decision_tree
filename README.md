@@ -37,7 +37,7 @@ Mask and metrics screening python code. Tools to generate masks, metrics and spe
 Python code for top models and model architectures. 
 #### |  Models
 All best model checkpoints are located in this subfolder. Placeholder python code to load in all model checkpoints. A placeholder has been added for models too large to add to this repository. Please run the placeholder routine in the misc folder to load in all best model chekpoints. All models will be either loaded from the GitHub releases (YOLOv11, YOLO26, U-Net and Detectron2) or from Hugging Face (SAM3). 
-#### Top
+#### Top (generated in Notebook)
 Python code to sort top_model_table.csv and output a top 5 (or top #) subset table based on metrics of interest. 
 #### top_model_decision_tree.ipynb
 Main Notebook to run the Top Model Decision Tree. This notebook is only compatible with Google Colab. Open this notebook in Google Colab and git clone the remaining folder components to use the framework.
