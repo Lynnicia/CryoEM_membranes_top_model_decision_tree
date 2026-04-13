@@ -197,93 +197,710 @@ def run_model_metrics_pipeline_yv11(Model, Model_Image_Size, Model_Electron_Dose
 
 
 
+    # METRICS
+
+    #-------------------------------------------------------------------------------
+    #-------------------------------------------------------------------------------
+    #-------------------------------------------------------------------------------
+
+    # YOLO-specific object metrics
 
 
+    metrics = model.val(
+        data=f"/content/CryoEM_membranes_top_model_decision_tree/Datasets/{Test_Electron_Dose}/YOLO/test/{Test_Electron_Dose}_test.yaml",
+        split="test",     # 👈 evaluate on test set
+        imgsz=TARGET_SIZE
+    )
 
 
+    # overall object metrics (IOU not possible in object detection)
+    print("\033[94m")
+    print("\n=== Overall Object Segmentation Metrics ===\n")
+
+    print("Overall Mask mAP50-95:", metrics.seg.map)
+    print("Overall Mask mAP50:", metrics.seg.map50)
+    """ //#####|tree_root|#####\\ """
+    df.loc[all_condition, "O.mAP50"] = metrics.seg.map50
+    print("Overall Mask mAP75:", metrics.seg.map75)
+    print("Overall Mask Precision:", metrics.seg.mp)
+    """ //#####|tree_root|#####\\ """
+    df.loc[all_condition, "O.Mask_Precision"] = metrics.seg.mp
+    print("Overall Mask Recall:", metrics.seg.mr)
+    """ //#####|tree_root|#####\\ """
+    df.loc[all_condition, "O.Mask_Recall"] = metrics.seg.mr
+    print("Overall Mask F1:", metrics.seg.f1.mean())
+    """ //#####|tree_root|#####\\ """
+    df.loc[all_condition, "O.F1-Score"] = metrics.seg.f1.mean()
+    print("\033[0m")
 
 
+    # Per class pobject metrics
+
+    class_names = ["IM", "OM"]
+
+    ap_matrix = metrics.seg.all_ap  # (nc, 10)
+    print("\033[94m")
+    print("\n=== Per-Class Object Segmentation Metrics ===")
+    print("\033[0m")
+    for i, name in enumerate(class_names):
+
+        """ //#####|tree_root|#####\\ """
+        class_condition = (
+            (df["Model"] == Model) &
+            (df["Model_Electron_Dose"] == Model_Electron_Dose) &
+            (df["Model_Image_Size"] == Model_Image_Size) &
+            (df["Test_Electron_Dose"] == Test_Electron_Dose) &
+            (df["Test_Image_Size"] == Test_Image_Size) &
+            (df["Class"] == name)
+        )
+
+        print("\033[94m")
+        print(f"\n{name}:")
+
+        precision = metrics.seg.p[i]
+        recall = metrics.seg.r[i]
+        f1 = metrics.seg.f1[i]
+
+        print("Mask mAP50-95:", metrics.seg.maps[i])
+        print("Mask AP50:", ap_matrix[i, 0])
+        """ //#####|tree_root|#####\\ """
+        df.loc[class_condition, "O.mAP50"] = ap_matrix[i, 0]
+        print("Mask AP75:", ap_matrix[i, 5])
+        print("Mask Precision:", metrics.seg.p[i])
+        """ //#####|tree_root|#####\\ """
+        df.loc[class_condition, "O.Mask_Precision"] = metrics.seg.p[i]
+        print("Mask Recall:", metrics.seg.r[i])
+        """ //#####|tree_root|#####\\ """
+        df.loc[class_condition, "O.Mask_Recall"] = metrics.seg.r[i]
+        print("Mask F1:", metrics.seg.f1[i])
+        """ //#####|tree_root|#####\\ """
+        df.loc[class_condition, "O.F1-Score"] = metrics.seg.f1[i]
+        print("\033[0m")
 
 
+    #-------------------------------------------------------------------------------
+    #-------------------------------------------------------------------------------
+    #-------------------------------------------------------------------------------
+
+    # overall pixel segmentation metrics
+
+    print("Total images before segmentation metrics:", len(test_images))
+
+    print("\033[91m")
+    print("\n=== Overall Pixel Segmentation Metrics (No OM Cleaning) ===\n")
+
+    iou_scores = []
+    dice_scores = []
+    precisions, recalls, f1s = [], [], []
 
 
+    for img_path in test_images:
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-    total_bacteria = 0
-
-    for img_path in image_files:
         image = cv2.imread(img_path)
         if image is None:
-            print(f"Skipping unreadable image {img_path}")
+            print("Bad image:", img_path)
             continue
 
-        base = os.path.splitext(os.path.basename(img_path))[0]
-        save_img = os.path.join(output_folder, f"{base}_thickness.png")
-        save_csv = os.path.join(output_folder, f"{base}_thickness.csv")
-        save_angles_csv = os.path.join(output_folder, f"{base}_angles.csv")
+        results = model.predict(img_path, imgsz=TARGET_SIZE, verbose=False)[0]
 
-        # ✅ Skip already processed images
-        #if os.path.exists(save_img) and os.path.exists(save_csv):
-        #    print(f"Skipping {img_path} (already processed)")
-        #    continue
+        txt_path = img_path.replace("/images/", "/labels/").replace(".jpg", ".txt")
 
-        image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        img_height, img_width = image_rgb.shape[:2]
+        # --- Ground truth ---
+        gt_mask_im = yolo_txt_to_mask(txt_path, image.shape, class_id=0)
+        if gt_mask_im is None:
+            gt_mask_im = np.zeros(image.shape[:2], dtype=np.uint8)
 
-        results = model.predict(image_rgb, imgsz = 1024, conf=0.5, verbose=False)[0]
+        gt_mask_om = yolo_txt_to_mask(txt_path, image.shape, class_id=1)
+        if gt_mask_om is None:
+            gt_mask_om = np.zeros(image.shape[:2], dtype=np.uint8)
 
-        #  Skip images where YOLO found no masks
-        if results.masks is None:
-            print(f"Skipping {img_path} (no masks detected)")
+
+        # --- Prediction masks ---
+        pred_mask_im = np.zeros_like(gt_mask_im, dtype=np.uint8)
+        pred_mask_om = np.zeros_like(gt_mask_om, dtype=np.uint8)
+
+
+        if results.masks is not None:
+            masks = results.masks.data.cpu().numpy()
+            classes = results.boxes.cls.cpu().numpy()
+
+            for i, m in enumerate(masks):
+                m_resized = cv2.resize(
+                    m.astype(np.uint8),
+                    (gt_mask_im.shape[1], gt_mask_im.shape[0]),
+                    interpolation=cv2.INTER_NEAREST
+                )
+
+                if classes[i] == 0:
+                    pred_mask_im = np.maximum(pred_mask_im, m_resized)
+
+                elif classes[i] == 1:
+                    pred_mask_om = np.maximum(pred_mask_om, m_resized)
+
+        # Convert to boolean
+        gt_mask_im = gt_mask_im > 0
+        gt_mask_om = gt_mask_om > 0
+        # gt_mask_om_clean = gt_mask_om & (~gt_mask_im)
+        pred_mask_im = pred_mask_im > 0
+        pred_mask_om = pred_mask_om > 0
+
+        # Stack into channels
+        true_mask = np.stack([gt_mask_im, gt_mask_om])
+        pred_mask = np.stack([pred_mask_im, pred_mask_om])
+
+        # ✅ Compute and STORE
+        iou = calculate_iou(pred_mask, true_mask)
+        dice = calculate_dice(pred_mask, true_mask)
+        precision, recall, f1 = calculate_precision_recall_f1(pred_mask, true_mask)
+
+        iou_scores.append(iou)
+        dice_scores.append(dice)
+        precisions.append(precision)
+        recalls.append(recall)
+        f1s.append(f1)
+
+
+
+
+
+    all_true = [[], []]
+    all_probs = [[], []]
+
+    for img_path in test_images:
+
+        image = cv2.imread(img_path)
+        if image is None:
             continue
 
-        masks = results.masks.data.cpu().numpy()
-        class_ids = results.boxes.cls.cpu().numpy().astype(int)
+        results = model.predict(img_path, imgsz=TARGET_SIZE, verbose=False)[0]
 
-        om_masks, im_masks = [], []
-        for i, mask in enumerate(masks):
-            resized = cv2.resize(mask, (img_width, img_height), interpolation=cv2.INTER_NEAREST)
-            binary = (resized > 0.5).astype(np.uint8) * 255
-            if class_ids[i] == 1:
-                om_masks.append(binary)
-            elif class_ids[i] == 0:
-                im_masks.append(binary)
+        txt_path = img_path.replace("/images/", "/labels/").replace(".jpg", ".txt")
 
-        # Skip if OM or IM missing
-        if not om_masks or not im_masks:
-            print(f"Skipping {img_path} (missing OM or IM contour)")
+        # --- Ground truth ---
+        gt_mask_im = yolo_txt_to_mask(txt_path, image.shape, class_id=0)
+        if gt_mask_im is None:
+            gt_mask_im = np.zeros(image.shape[:2], dtype=np.uint8)
+
+        gt_mask_om = yolo_txt_to_mask(txt_path, image.shape, class_id=1)
+        if gt_mask_om is None:
+            gt_mask_om = np.zeros(image.shape[:2], dtype=np.uint8)
+
+        # --- Probability maps ---
+        combined_prob_im = np.zeros_like(gt_mask_im, dtype=np.float32)
+        combined_prob_om = np.zeros_like(gt_mask_om, dtype=np.float32)
+
+        if results.masks is not None:
+            masks = results.masks.data.cpu().numpy()
+            classes = results.boxes.cls.cpu().numpy()
+
+            for i, m in enumerate(masks):
+
+                m_resized = cv2.resize(
+                    m,
+                    (gt_mask_im.shape[1], gt_mask_im.shape[0]),
+                    interpolation=cv2.INTER_NEAREST
+                )
+
+                if classes[i] == 0:
+                    combined_prob_im = np.maximum(combined_prob_im, m_resized)
+
+                elif classes[i] == 1:
+                    combined_prob_om = np.maximum(combined_prob_om, m_resized)
+
+        # Convert GT to boolean
+        gt_mask_im = gt_mask_im > 0
+        gt_mask_om = gt_mask_om > 0
+
+        # Stack
+        true_mask = np.stack([gt_mask_im, gt_mask_om])
+        pred_probs = np.stack([combined_prob_im, combined_prob_om])
+
+        # 🔥 Aggregate pixels
+        for c in range(2):
+            all_true[c].extend(true_mask[c].flatten())
+            all_probs[c].extend(pred_probs[c].flatten())
+
+    auprcs = []
+
+    for c in range(2):
+
+        y_true = np.array(all_true[c])
+        y_prob = np.array(all_probs[c])
+
+        precision, recall, _ = precision_recall_curve(y_true, y_prob)
+        auprc = auc(recall, precision)
+
+        auprcs.append(auprc)
+
+
+    # ✅ Now compute dataset average
+    print("Mean IoU:", np.mean(iou_scores))
+    print("Mean Dice:", np.mean(dice_scores))
+    print("Mean Precision:", np.mean(precisions))
+    print("Mean Recall:", np.mean(recalls))
+    print("Mean F1:", np.mean(f1s))
+    print("Mean AUPRC:", np.mean(auprcs))
+    print("\033[0m")
+
+    #-------------------------------------------------------------------------------
+    #-------------------------------------------------------------------------------
+    #-------------------------------------------------------------------------------
+
+    # per class (except AUPRC above)
+
+    # IM storage
+    iou_im_scores = []
+    dice_im_scores = []
+    prec_im_scores = []
+    rec_im_scores = []
+    f1_im_scores = []
+    auprc_im_scores = []
+
+    # OM storage
+    iou_om_scores = []
+    dice_om_scores = []
+    prec_om_scores = []
+    rec_om_scores = []
+    f1_om_scores = []
+    auprc_om_scores = []
+
+
+    for img_path in test_images:
+
+        image = cv2.imread(img_path)
+        if image is None:
             continue
 
-        im_combined = np.maximum.reduce(im_masks) if im_masks else np.zeros((img_height, img_width), dtype=np.uint8)
-        om_combined = np.maximum.reduce(om_masks) if om_masks else np.zeros((img_height, img_width), dtype=np.uint8)
+        results = model.predict(img_path, imgsz=TARGET_SIZE, verbose=False)[0]
 
-        cv2.imwrite(os.path.join(output_folder, f"{base}_IM_mask.png"), im_combined)
-        cv2.imwrite(os.path.join(output_folder, f"{base}_OM_mask.png"), om_combined)
-        
-        class_ids = results.boxes.cls.cpu().numpy().astype(int)
+        txt_path = img_path.replace("/images/", "/labels/").replace(".jpg", ".txt")
 
-        num_bacteria = np.sum(class_ids == 1)  # count OM only
-        total_bacteria += num_bacteria
-        print(f"{img_path}: {num_bacteria} bacteria")
+        # --- Ground truth ---
+        gt_mask_im = yolo_txt_to_mask(txt_path, image.shape, class_id=0)
+        if gt_mask_im is None:
+            gt_mask_im = np.zeros(image.shape[:2], dtype=np.uint8)
 
-    print(f"\nTotal predicted bacteria with YOLOv11 across all images: {total_bacteria}")
+        gt_mask_om = yolo_txt_to_mask(txt_path, image.shape, class_id=1)
+        if gt_mask_om is None:
+            gt_mask_om = np.zeros(image.shape[:2], dtype=np.uint8)
+
+        # --- Prediction ---
+        pred_mask_im = np.zeros_like(gt_mask_im)
+        pred_mask_om = np.zeros_like(gt_mask_om)
+
+        if results.masks is not None:
+            masks = results.masks.data.cpu().numpy()
+            classes = results.boxes.cls.cpu().numpy()
+
+            for i, m in enumerate(masks):
+                m_resized = cv2.resize(
+                    m.astype(np.uint8),
+                    (gt_mask_im.shape[1], gt_mask_im.shape[0]),
+                    interpolation=cv2.INTER_NEAREST
+                )
+
+                if classes[i] == 0:
+                    pred_mask_im = np.maximum(pred_mask_im, m_resized)
+                elif classes[i] == 1:
+                    pred_mask_om = np.maximum(pred_mask_om, m_resized)
+
+        # Convert to boolean
+        gt_mask_im = gt_mask_im > 0
+        gt_mask_om = gt_mask_om > 0
+        # gt_mask_om_clean = gt_mask_om & (~gt_mask_im)
+        pred_mask_im = pred_mask_im > 0
+        pred_mask_om = pred_mask_om > 0
+
+        # --- IM metrics ---
+        true_im = np.stack([gt_mask_im])
+        pred_im = np.stack([pred_mask_im])
+
+        iou_im_scores.append(calculate_iou(pred_im, true_im))
+        dice_im_scores.append(calculate_dice(pred_im, true_im))
+        p, r, f = calculate_precision_recall_f1(pred_im, true_im)
+        prec_im_scores.append(p)
+        rec_im_scores.append(r)
+        f1_im_scores.append(f)
+
+        # --- OM metrics ---
+        true_om = np.stack([gt_mask_om])
+        pred_om = np.stack([pred_mask_om])
+
+        iou_om_scores.append(calculate_iou(pred_om, true_om))
+        dice_om_scores.append(calculate_dice(pred_om, true_om))
+        p, r, f = calculate_precision_recall_f1(pred_om, true_om)
+        prec_om_scores.append(p)
+        rec_om_scores.append(r)
+        f1_om_scores.append(f)
+
+    print("\033[91m")
+    print("\n=== Per-Class Pixel Segmentation Metrics (No OM Cleaning) ===\n")
+
+    # ✅ Now compute dataset average
+    print("IM IoU:", np.mean(iou_im_scores))
+    print("IM Dice:", np.mean(dice_im_scores))
+    print("IM Precision:", np.mean(prec_im_scores))
+    print("IM Recall:", np.mean(rec_im_scores))
+    print("IM F1:", np.mean(f1_im_scores))
+
+    # ✅ Now compute dataset average
+    print("\nOM IoU:", np.mean(iou_om_scores))
+    print("OM Dice:", np.mean(dice_om_scores))
+    print("OM Precision:", np.mean(prec_om_scores))
+    print("OM Recall:", np.mean(rec_om_scores))
+    print("OM F1:", np.mean(f1_om_scores))
+
+
+    auprcs = []
+
+    for c in range(2):
+
+        y_true = np.array(all_true[c])
+        y_prob = np.array(all_probs[c])
+
+        precision, recall, _ = precision_recall_curve(y_true, y_prob)
+        auprc = auc(recall, precision)
+
+        auprcs.append(auprc)
+
+        print(f"Class {c} AUPRC: {auprc:.4f}")
+
+    print("\033[0m")
+
+    #-------------------------------------------------------------------------------
+    #-------------------------------------------------------------------------------
+    #-------------------------------------------------------------------------------
+
+
+
+
+    # overall
+
+    print("\n=== Overall Pixel Segmentation Metrics (OM Clean) ===\n")
+
+    iou_scores = []
+    dice_scores = []
+    precisions, recalls, f1s = [], [], []
+
+
+    for img_path in test_images:
+
+        image = cv2.imread(img_path)
+        if image is None:
+            print("Bad image:", img_path)
+            continue
+
+        results = model.predict(img_path, imgsz=TARGET_SIZE, verbose=False)[0]
+
+        txt_path = img_path.replace("/images/", "/labels/").replace(".jpg", ".txt")
+
+        # --- Ground truth ---
+        gt_mask_im = yolo_txt_to_mask(txt_path, image.shape, class_id=0)
+        if gt_mask_im is None:
+            gt_mask_im = np.zeros(image.shape[:2], dtype=np.uint8)
+
+        gt_mask_om = yolo_txt_to_mask(txt_path, image.shape, class_id=1)
+        if gt_mask_om is None:
+            gt_mask_om = np.zeros(image.shape[:2], dtype=np.uint8)
+
+
+        # --- Prediction masks ---
+        pred_mask_im = np.zeros_like(gt_mask_im, dtype=np.uint8)
+        pred_mask_om = np.zeros_like(gt_mask_om, dtype=np.uint8)
+
+
+        if results.masks is not None:
+            masks = results.masks.data.cpu().numpy()
+            classes = results.boxes.cls.cpu().numpy()
+
+            for i, m in enumerate(masks):
+                m_resized = cv2.resize(
+                    m.astype(np.uint8),
+                    (gt_mask_im.shape[1], gt_mask_im.shape[0]),
+                    interpolation=cv2.INTER_NEAREST
+                )
+
+                if classes[i] == 0:
+                    pred_mask_im = np.maximum(pred_mask_im, m_resized)
+
+                elif classes[i] == 1:
+                    pred_mask_om = np.maximum(pred_mask_om, m_resized)
+
+        # Convert to boolean
+        gt_mask_im = gt_mask_im > 0
+        gt_mask_om = gt_mask_om > 0
+        gt_mask_om_clean = gt_mask_om & (~gt_mask_im)
+        pred_mask_im = pred_mask_im > 0
+        pred_mask_om = pred_mask_om > 0
+
+        # Stack into channels
+        true_mask = np.stack([gt_mask_im, gt_mask_om_clean])
+        pred_mask = np.stack([pred_mask_im, pred_mask_om])
+
+        # ✅ Compute and STORE
+        iou = calculate_iou(pred_mask, true_mask)
+        dice = calculate_dice(pred_mask, true_mask)
+        precision, recall, f1 = calculate_precision_recall_f1(pred_mask, true_mask)
+
+        iou_scores.append(iou)
+        dice_scores.append(dice)
+        precisions.append(precision)
+        recalls.append(recall)
+        f1s.append(f1)
+
+
+
+    all_true = [[], []]
+    all_probs = [[], []]
+
+    for img_path in test_images:
+
+        image = cv2.imread(img_path)
+        if image is None:
+            continue
+
+        results = model.predict(img_path, imgsz=TARGET_SIZE, verbose=False)[0]
+
+        txt_path = img_path.replace("/images/", "/labels/").replace(".jpg", ".txt")
+
+        # --- Ground truth ---
+        gt_mask_im = yolo_txt_to_mask(txt_path, image.shape, class_id=0)
+        if gt_mask_im is None:
+            gt_mask_im = np.zeros(image.shape[:2], dtype=np.uint8)
+
+        gt_mask_om = yolo_txt_to_mask(txt_path, image.shape, class_id=1)
+        if gt_mask_om is None:
+            gt_mask_om = np.zeros(image.shape[:2], dtype=np.uint8)
+
+        # --- Probability maps ---
+        combined_prob_im = np.zeros_like(gt_mask_im, dtype=np.float32)
+        combined_prob_om = np.zeros_like(gt_mask_om, dtype=np.float32)
+
+        if results.masks is not None:
+            masks = results.masks.data.cpu().numpy()
+            classes = results.boxes.cls.cpu().numpy()
+
+            for i, m in enumerate(masks):
+
+                m_resized = cv2.resize(
+                    m,
+                    (gt_mask_im.shape[1], gt_mask_im.shape[0]),
+                    interpolation=cv2.INTER_NEAREST
+                )
+
+                if classes[i] == 0:
+                    combined_prob_im = np.maximum(combined_prob_im, m_resized)
+
+                elif classes[i] == 1:
+                    combined_prob_om = np.maximum(combined_prob_om, m_resized)
+
+        # Convert GT to boolean
+        gt_mask_im = gt_mask_im > 0
+        gt_mask_om = gt_mask_om > 0
+        gt_mask_om_clean = gt_mask_om & (~gt_mask_im)
+
+        # Stack
+        true_mask = np.stack([gt_mask_im, gt_mask_om_clean])
+        pred_probs = np.stack([combined_prob_im, combined_prob_om])
+
+        # 🔥 Aggregate pixels
+        for c in range(2):
+            all_true[c].extend(true_mask[c].flatten())
+            all_probs[c].extend(pred_probs[c].flatten())
+
+    auprcs = []
+
+    for c in range(2):
+
+        y_true = np.array(all_true[c])
+        y_prob = np.array(all_probs[c])
+
+        precision, recall, _ = precision_recall_curve(y_true, y_prob)
+        auprc = auc(recall, precision)
+
+        auprcs.append(auprc)
+
+    # ✅ Now compute dataset average
+    print("Mean IoU:", np.mean(iou_scores))
     """ //#####|tree_root|#####\\ """
-    df.loc[all_condition, "total_bacteria"] = total_bacteria
+    df.loc[all_condition, "P.IOU"] = np.mean(iou_scores)
+    print("Mean Dice:", np.mean(dice_scores))
+    """ //#####|tree_root|#####\\ """
+    df.loc[all_condition, "P.Dice"] = np.mean(dice_scores)
+    print("Mean Precision:", np.mean(precisions))
+    """ //#####|tree_root|#####\\ """
+    df.loc[all_condition, "P.Mask_Precision"] = np.mean(precisions)
+    print("Mean Recall:", np.mean(recalls))
+    """ //#####|tree_root|#####\\ """
+    df.loc[all_condition, "P.Mask_Recall"] = np.mean(recalls)
+    print("Mean F1:", np.mean(f1s))
+    """ //#####|tree_root|#####\\ """
+    df.loc[all_condition, "P.F1-Score"] = np.mean(f1s)
+    print("Mean AUPRC:", np.mean(auprcs))
+    """ //#####|tree_root|#####\\ """
+    df.loc[all_condition, "P.AUPRC"] = np.mean(auprcs)
+
+
+    # per class
+
+    # IM storage
+    iou_im_scores = []
+    dice_im_scores = []
+    prec_im_scores = []
+    rec_im_scores = []
+    f1_im_scores = []
+    auprc_im_scores = []
+
+    # OM storage
+    iou_om_scores = []
+    dice_om_scores = []
+    prec_om_scores = []
+    rec_om_scores = []
+    f1_om_scores = []
+    auprc_om_scores = []
+
+
+    for img_path in test_images:
+
+        image = cv2.imread(img_path)
+        if image is None:
+            continue
+
+        results = model.predict(img_path, imgsz=TARGET_SIZE, verbose=False)[0]
+
+        txt_path = img_path.replace("/images/", "/labels/").replace(".jpg", ".txt")
+
+        # --- Ground truth ---
+        gt_mask_im = yolo_txt_to_mask(txt_path, image.shape, class_id=0)
+        if gt_mask_im is None:
+            gt_mask_im = np.zeros(image.shape[:2], dtype=np.uint8)
+
+        gt_mask_om = yolo_txt_to_mask(txt_path, image.shape, class_id=1)
+        if gt_mask_om is None:
+            gt_mask_om = np.zeros(image.shape[:2], dtype=np.uint8)
+
+        # --- Prediction ---
+        pred_mask_im = np.zeros_like(gt_mask_im)
+        pred_mask_om = np.zeros_like(gt_mask_om)
+
+        if results.masks is not None:
+            masks = results.masks.data.cpu().numpy()
+            classes = results.boxes.cls.cpu().numpy()
+
+            for i, m in enumerate(masks):
+                m_resized = cv2.resize(
+                    m.astype(np.uint8),
+                    (gt_mask_im.shape[1], gt_mask_im.shape[0]),
+                    interpolation=cv2.INTER_NEAREST
+                )
+
+                if classes[i] == 0:
+                    pred_mask_im = np.maximum(pred_mask_im, m_resized)
+                elif classes[i] == 1:
+                    pred_mask_om = np.maximum(pred_mask_om, m_resized)
+
+        # Convert to boolean
+        gt_mask_im = gt_mask_im > 0
+        gt_mask_om = gt_mask_om > 0
+        gt_mask_om_clean = gt_mask_om & (~gt_mask_im)
+        pred_mask_im = pred_mask_im > 0
+        pred_mask_om = pred_mask_om > 0
+
+        # --- IM metrics ---
+        true_im = np.stack([gt_mask_im])
+        pred_im = np.stack([pred_mask_im])
+
+        iou_im_scores.append(calculate_iou(pred_im, true_im))
+        dice_im_scores.append(calculate_dice(pred_im, true_im))
+        p, r, f = calculate_precision_recall_f1(pred_im, true_im)
+        prec_im_scores.append(p)
+        rec_im_scores.append(r)
+        f1_im_scores.append(f)
+
+        # --- OM metrics ---
+        true_om = np.stack([gt_mask_om_clean])
+        pred_om = np.stack([pred_mask_om])
+
+        iou_om_scores.append(calculate_iou(pred_om, true_om))
+        dice_om_scores.append(calculate_dice(pred_om, true_om))
+        p, r, f = calculate_precision_recall_f1(pred_om, true_om)
+        prec_om_scores.append(p)
+        rec_om_scores.append(r)
+        f1_om_scores.append(f)
+
+
+    print("\n=== Per-Class Pixel Segmentation Metrics (OM Clean) ===\n")
+
+    # ✅ Now compute dataset average
+
+    print("IM IoU:", np.mean(iou_im_scores))
+    """ //#####|tree_root|#####\\ """
+    df.loc[im_condition, "P.IOU"] = np.mean(iou_im_scores)
+    print("IM Dice:", np.mean(dice_im_scores))
+    """ //#####|tree_root|#####\\ """
+    df.loc[im_condition, "P.Dice"] = np.mean(dice_im_scores)
+    print("IM Precision:", np.mean(prec_im_scores))
+    """ //#####|tree_root|#####\\ """
+    df.loc[im_condition, "P.Mask_Precision"] = np.mean(prec_im_scores)
+    print("IM Recall:", np.mean(rec_im_scores))
+    """ //#####|tree_root|#####\\ """
+    df.loc[im_condition, "P.Mask_Recall"] = np.mean(rec_im_scores)
+    print("IM F1:", np.mean(f1_im_scores))
+    """ //#####|tree_root|#####\\ """
+    df.loc[im_condition, "P.F1-Score"] = np.mean(f1_im_scores)
+
+    # ✅ Now compute dataset average
+    print("\nOM IoU:", np.mean(iou_om_scores))
+    """ //#####|tree_root|#####\\ """
+    df.loc[om_condition, "P.IOU"] = np.mean(iou_om_scores)
+    print("OM Dice:", np.mean(dice_om_scores))
+    """ //#####|tree_root|#####\\ """
+    df.loc[om_condition, "P.Dice"] = np.mean(dice_om_scores)
+    print("OM Precision:", np.mean(prec_om_scores))
+    """ //#####|tree_root|#####\\ """
+    df.loc[om_condition, "P.Mask_Precision"] = np.mean(prec_om_scores)
+    print("OM Recall:", np.mean(rec_om_scores))
+    """ //#####|tree_root|#####\\ """
+    df.loc[om_condition, "P.Mask_Recall"] = np.mean(rec_om_scores)
+    print("OM F1:", np.mean(f1_om_scores))
+    """ //#####|tree_root|#####\\ """
+    df.loc[om_condition, "P.F1-Score"] = np.mean(f1_om_scores)
+
+    auprcs = []
+
+    for c in range(2):
+        num_class_condition = (
+            (df["Model"] == Model) &
+            (df["Model_Electron_Dose"] == Model_Electron_Dose) &
+            (df["Model_Image_Size"] == Model_Image_Size) &
+            (df["Test_Electron_Dose"] == Test_Electron_Dose) &
+            (df["Test_Image_Size"] == Test_Image_Size) &
+            (df["Channel"].fillna(-1).astype(int) == c)
+        )
+
+        y_true = np.array(all_true[c])
+        y_prob = np.array(all_probs[c])
+
+        precision, recall, _ = precision_recall_curve(y_true, y_prob)
+        auprc = auc(recall, precision)
+
+        auprcs.append(auprc)
+
+        print(f"Class {c} AUPRC: {auprc:.4f}")
+        """ //#####|tree_root|#####\\ """
+        df.loc[num_class_condition, "P.AUPRC"] = auprc
+
+
+    print("Total images after segmentation metrics:", len(test_images))
 
     df.to_csv(csv_path, index=False)
     print("CSV updated successfully to Tree ✅")
+
+
+
+
+
+
     
 
     return Model, Model_Image_Size, Model_Electron_Dose, Test_Image_Size, Test_Electron_Dose, input_folder, TARGET_FOLDER, MODEL_PATH_yv11, test_images_yv11, test_images_orig_folder
