@@ -2,7 +2,7 @@
 ### Background
 Multiple deep learning model architectures can be used to segment bacterial membranes in cryoEM images. However, an AI-based tool advancement is often presented with only a single segmentation model for broad use, and this single model may show inconsistent results across datasets from different users. Here, we present the Top Model Decision Tree, a model screening framwework to screen for the best model to generate bacterial inner and outer membrane masks based on user priorities. We use pre-trained segmentation models from YOLOv11, YOLO26, U-Net, Detectron2 and SAM3 fine-tuned on bacterial inner and outer membranes imaged with cryoEM. 
 ### Overview
-This repository hosts a model screening framework for *Pantoea* sp. YR343 low dose and ultralow dose cryo-electron microscopy (cryoEM) datasets. This framework can be used as a plug and play to select the top models that output segmentation masks used in AI-based tool pipelines. We have chosen the Bacterial Cell Envelope Tool hosted at https://github.com/Sireesiru/Cryo-TEM-Ultrastructures in Membrane_Thickness_Tool.ipynb as a representative AI-based tool. This workflow streamlines for model selection process to target tool compatibility and tool scalability across cryoEM imaging conditions. 
+This repository hosts a model screening framework for *Pantoea* sp. YR343 low dose and ultralow dose cryo-electron microscopy (cryoEM) datasets. This framework can be used as a plug and play to select the top models that output segmentation masks used in AI-based tool pipelines. We have chosen the Bacterial Cell Envelope Tool hosted at Constellation (DOI: 10.13139/ORNLNCCS/2997581) and GitHub (https://github.com/Sireesiru/Cryo-TEM-Ultrastructures in Membrane_Thickness_Tool.ipynb) as a representative AI-based tool. This workflow streamlines for model selection process to target tool compatibility and tool scalability across cryoEM imaging conditions. 
 
 <div align="center">
 <img width="569" height="408" alt="image" src="https://github.com/user-attachments/assets/e64ff81f-c265-487c-ad3b-95ea3f7cdd05" />
@@ -18,7 +18,7 @@ This repository hosts a model screening framework for *Pantoea* sp. YR343 low do
 #### 1. Select mode for electron dose and test images
 Load in your top model checkpoints and architecture. Next, load in test images. 
 #### 2. Select mask count
-Prepare a manual count of bacteria in your test images. We used 15 images to manually count a total of 20 bacteria. Around 10-20 images can be used for a manual count with a custom dataset. This will output predicted masks and mask counts for the test images. Refer to https://github.com/Sireesiru/Cryo-TEM-Ultrastructures for the notebook and instructions to use the Bacterial Cell Envelope Thickness Tool.
+Prepare a manual count of bacteria in your test images. We used 15 images to manually count a total of 20 bacteria. Around 10-20 images can be used for a manual count with a custom dataset. This will output predicted masks and mask counts for the test images. Refer to https://github.com/Sireesiru/Cryo-TEM-Ultrastructures or Constellation (DOI: 10.13139/ORNLNCCS/2997581) for the notebook and instructions to use the Bacterial Cell Envelope Thickness Tool.
 #### 3. Select evaluation critera
 This will output metrics for the class of interest. This has been hard-coded to output All classes (averaged OM and IM metrics), OM class and IM class. 
 
@@ -36,7 +36,7 @@ Mask and metrics screening python code. Tools to generate masks, metrics and spe
 #### Seed
 Python code for top models and model architectures. 
 #### |  Models
-All best model checkpoints are located in this subfolder. Placeholder python code to load in all model checkpoints. A placeholder has been added for models too large to add to this repository. Please run the placeholder routine in the misc folder to load in all best model chekpoints. All models will be either loaded from the GitHub releases (YOLOv11, YOLO26, U-Net and Detectron2) or from Hugging Face (SAM3). 
+All best model checkpoints are located in this subfolder. Placeholder python code to load in all model checkpoints. A placeholder has been added for models too large to add to this repository. Please run the placeholder routine in the misc folder to load in all best model chekpoints. All models will be either loaded from Constellation (DOI: 10.13139/ORNLNCCS/3025228), GitHub releases (YOLOv11, YOLO26, U-Net and Detectron2) or from Hugging Face (SAM3). 
 #### Top (generated in Notebook)
 Python code to sort top_model_table.csv and output a top 5 (or top #) subset table based on metrics of interest. 
 #### top_model_decision_tree.ipynb
@@ -47,4 +47,4 @@ Blank .csv file that will populate with metrics based on test image inferences.
 Example .csv output from the Top Model Decision Tree based on example LD and ULD test images.
 
 ### Future Outlook
-This framework presented in this GitHub is not limited to only bacterial membrane segmentation. Please feel free to restructure the model architectures to adapt to your fine-tuned pre-trained model checkpoints to custom datasets. 
+This framework presented in Constellation and GitHub is not limited to only bacterial membrane segmentation. Please feel free to restructure the model architectures to adapt to your fine-tuned pre-trained model checkpoints to custom datasets. 
