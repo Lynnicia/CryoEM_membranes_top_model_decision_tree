@@ -50,3 +50,234 @@ Example .csv output from the Top Model Decision Tree based on example LD and ULD
 
 ### Future Outlook
 This framework presented in Constellation and GitHub is not limited to only bacterial membrane segmentation. Please feel free to restructure the model architectures to adapt to your fine-tuned pre-trained model checkpoints to custom datasets. 
+
+__________________________________________________________________________________________
+
+
+This readme file repository update was generated on 2025-05-21 by Lynnicia Massenburg
+
+
+GENERAL INFORMATION
+
+1. Title of Dataset:  CryoEM_membranes_top_model_decision_tree
+
+2. Author Information
+	A. Principal Investigator Contact Information
+		Name: Alexis Williams
+		ORCID: 0000-0002-5283-5822
+		Institution: Oak Ridge National Laboratory
+		Email: williamsan@ornl.gov
+
+	B. Alternate Contact Information
+		Name: Lynnicia Massenburg
+		ORCID: 0000-0002-6590-273X
+		Institution: Oak Ridge National Laboratory
+		Email: massenb2@hotmail.com 
+
+3. Date of data collection: 2025-06-26
+
+4. Geographic location of data collection: Oak Ridge, TN
+
+5. Information about funding sources that supported the collection of the data: 
+
+This work is supported by the U.S. Department of Energy, Office of Science FWP ERKCZ64, Structure Guided Design of Materials to Optimize the Abiotic-Biotic Material Interface, as part of the Biopreparedness Research Virtual Environment (BRaVE) initiative. Sample preparation, imaging and image analysis were conducted as part of a user project at the Center for Nanophase Materials Sciences (CNMS), which is a US Department of Energy, Office of Science User Facility at Oak Ridge National Laboratory. Electron microscopy data was collected using instrumentation within ORNL's Materials Characterization Core provided by UT-Battelle, LLC, under Contract No. DE-AC05- 00OR22725 with the DOE and sponsored by the Laboratory Directed Research and Development Program of Oak Ridge National Laboratory, managed by UT-Battelle, LLC, for the U.S. Department of Energy.
+
+SHARING/ACCESS INFORMATION
+
+1. Reuse restrictions placed on the data:  MIT license
+
+2. Links to publications that cite or use the data:  (paper publication in progress)
+
+3. Links to other publicly accessible locations of the data:  N/A
+
+4. Links/relationships to ancillary data sets: 
+
+GitHub (same dataset): https://github.com/Lynnicia/CryoEM_membranes_top_model_decision_tree
+
+HuggingFace (same dataset): 
+https://huggingface.co/LynnMass/640-SAM3-ULD
+https://huggingface.co/LynnMass/640-SAM3-LD
+https://huggingface.co/LynnMass/1024-SAM3-LD
+https://huggingface.co/LynnMass/1024-SAM3-ULD
+
+5. Was data derived from another source? If yes, list source(s):  No
+
+6. Recommended citation for this dataset: 
+
+Massenburg, L. N., Madugula, S. S., Brown, S. R., Bible, A. N., Zhang, L., Parker, K., Retterer, S.T., Morrell-Falvey, J.L., Vasudevan, R. K. and Williams, A. (2026). Dataset for Top Model Decision Tree: Selecting Segmentation Models for Reliable Quantitative Analysis in Low- and Ultralow-Dose CryoEM. Constellation. DOI: 10.13139/ORNLNCCS/3025229
+
+
+DATA & FILE OVERVIEW
+
+1. File List: 
+
+FOLDER: Datasets
+	SUBFOLDER: LD
+		SUBFOLDER: COCO
+			SUBFOLDER: test
+				SUBFOLDER: 640
+					FILES: [images].jpg (15)
+					FILE: _annotations.coco.json
+					FILE: _filt_annotations.coco.json
+				SUBFOLDER: 1024
+					FILES: [images].jpg (15)
+					FILE: _annotations.coco.json
+					FILE: _filt_annotations.coco.json
+				SUBFOLDER: 2048				
+					FILES: [images].jpg (15)
+					FILE: _annotations.coco.json
+				SUBFOLDER: 4096
+					FILES: [images].jpg (15)
+					FILE: _annotations.coco.json
+		SUBFOLDER: YOLO
+			SUBFOLDER: test
+				SUBFOLDER: images
+					FILES: [images].jpg (15)
+				SUBFOLDER: labels
+					FILES: [images].txt (15)
+				FILE: labels.cache
+			FILE: LD_test.yaml
+	SUBFOLDER: ULD
+		SUBFOLDER: COCO
+			SUBFOLDER: test
+				SUBFOLDER: 640
+					FILES: [images].jpg (18)
+					FILE: _annotations.coco.json
+					FILE: _filt_annotations.coco.json
+				SUBFOLDER: 1024
+					FILES: [images].jpg (18)
+					FILE: _annotations.coco.json
+					FILE: _filt_annotations.coco.json
+				SUBFOLDER: 2048				
+					FILES: [images].jpg (18)
+					FILE: _annotations.coco.json
+				SUBFOLDER: 4096
+					FILES: [images].jpg (18)
+					FILE: _annotations.coco.json
+		SUBFOLDER: YOLO
+			SUBFOLDER: test
+				SUBFOLDER: images
+					FILES: [images].jpg (18)
+				SUBFOLDER: labels
+					FILES: [images].txt (18)
+				FILE: labels.cache
+			FILE: LD_test.yaml
+
+FOLDER: drop
+	SUBFOLDER: __pycache__
+	FILE: __init__.py
+	FILE: coco_bacteria_dataset.py
+	FILE: custom_test_images.py
+	FILE: drop_test_images.py
+	FILE: LD_custom_test_images.py
+	FILE: LD_test_images.py
+	FILE: ULD_custom_test_images.py
+	FILE: ULD_test_images.py
+
+FOLDER: misc
+	FILE: Detectron2_example_segmentation_model_training.ipynb
+	FILE: SAM3_example_segmentation_model_training (1).ipynb
+
+FOLDER: root
+	SUBFOLDER: __pycache__
+	FILE: mask_decision_tree_d2.py
+	FILE: mask_decision_tree_s3.py
+	FILE: mask_decision_tree_u.py
+	FILE: mask_decision_tree_y26.py
+	FILE: mask_decision_tree_yv11.py
+	FILE: metrics_decision_tree_d2.py
+	FILE: metrics_decision_tree_s3.py
+	FILE: metrics_decision_tree_u.py
+	FILE: metrics_decision_tree_y26.py
+	FILE: metrics_decision_tree_yv11.py
+	FILE: speed_decision_tree_d2.py
+	FILE: speed_decision_tree_s3.py
+	FILE: speed_decision_tree_u.py
+	FILE: speed_decision_tree_y26.py
+	FILE: speed_decision_tree_yv11.py
+	
+FOLDER: seed
+	SUBFOLDER: __pycache__
+	SUBFOLDER: models
+		FILE: model_repo.ipynb
+	FILE: __init__.py
+	FILE: LD_models.py
+	FILE: model_arch.ipynb
+	FILE: ULD_models.py
+	
+FILE: example_top_model_table.csv
+	
+FILE: top_model_decision_tree.ipynb
+	
+FILE: top_model_table.csv
+
+
+2. Relationship between files: 
+Cryogenic electron miroscopy images of Pantoea sp. YR343 bacteria in [images]. Raw images (.jpeg files) and annotated (YOLO text and COCO json files) images. Instances listed in this file are model segmentation predictions per class. Folders named "drop", "root" and "seed" build the Top Model Decision Tree framework. The "misc" folder provides example model training routines for Detectron2 and SAM3 for custom datasets. 
+
+3. Additional related data collected that was not included in the current data package: 
+No
+
+4. Are there multiple versions of this dataset? If yes, what files were updated and why?
+Only one version of the dataset is available. 
+
+METHODOLOGICAL INFORMATION
+
+1. Description of methods used for collection/generation of data: 
+Madugula, S. S., Massenburg, L. N., Brown, S. R., Bible, A. N., Harris, C. R., Zhang, L. X., Parker, K., Retterer, S. T., Morrell-Falvey, J. L., Vasudevan, R. K., & Williams, A. N. (2026). Automated Bacterial Identification and Morphological Feature Analysis in Low-Dose Cryo-EM Using YOLOv11. Advanced Intelligent Discovery, n/a(n/a), e202500241. https://doi.org/https://doi.org/10.1002/aidi.202500241 
+
+2. Methods for processing the data: 
+Load images into Google Colab and run the Top Model Decision Tree framework to segment bacterial membranes. Walk through the steps outlined in top_model_decision_tree.ipynb to obtain masks and/or metrics. 
+
+3. Instrument- or software-specific information needed to interpret the data: 
+YOLOv11, YOLO26, U-Net, Detectron2, SAM3
+
+4. Standards and calibration information, if appropriate: 
+N/A
+
+5. Environmental/experimental conditions: 
+Manual cryoEM image collection was described in Madugula et al. for low-dose images collected at 40 e⁻/Å2 at –5 μm defocus using the Falcon 3EC direct electron detector (Thermo Fisher Scientific, counting mode) on the Thermo Fisher Scientific Krios G4 operated in nanoprobe TEM mode (Madugula et al., 2026). 
+
+Madugula, S. S., Massenburg, L. N., Brown, S. R., Bible, A. N., Harris, C. R., Zhang, L. X., Parker, K., Retterer, S. T., Morrell-Falvey, J. L., Vasudevan, R. K., & Williams, A. N. (2026). Automated Bacterial Identification and Morphological Feature Analysis in Low-Dose Cryo-EM Using YOLOv11. Advanced Intelligent Discovery, n/a(n/a), e202500241. https://doi.org/https://doi.org/10.1002/aidi.202500241 
+
+6. Describe any quality-assurance procedures performed on the data: 
+visual check
+
+7. People involved with sample collection, processing, analysis and/or submission: 
+Massenburg, L. N., Madugula, S. S., Brown, S. R., Bible, A. N., Zhang, L., Parker, K., Retterer, S.T., Morrell-Falvey, J.L., Vasudevan, R. K. and Williams, A.
+
+DATA-SPECIFIC INFORMATION FOR: All [images].jpg in LD subfolder
+
+1. Number of variables: 
+2 classes (class 0: inner membrane (IM), class 1: outer membrane (OM))
+
+2. Number of cases/rows: 
+15 images
+
+3. Variable List: 
+class 0: 20 instances
+class 1: 20 instances
+
+4. Codes used for missing data: 
+N/A
+
+5. Specialized formats or other abbreviations used: 
+N/A
+
+DATA-SPECIFIC INFORMATION FOR: All [images].jpg in ULD subfolder
+
+1. Number of variables: 
+2 classes (class 0: inner membrane (IM), class 1: outer membrane (OM))
+
+2. Number of cases/rows: 
+18 images
+ 
+3. Variable List: 
+class 0: 55 instances
+class 1: 55 instances
+
+4. Codes used for missing data: 
+N/A
+
+5. Specialized formats or other abbreviations used: 
+N/A
