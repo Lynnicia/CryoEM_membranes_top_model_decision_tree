@@ -112,13 +112,13 @@ DATA & FILE OVERVIEW
 1. File List: 
 
 FOLDER: Datasets
-	SUBFOLDER: LD
-		SUBFOLDER: COCO
-			SUBFOLDER: test
-				SUBFOLDER: 640
-					FILES: [images].jpg (15)
-					FILE: _annotations.coco.json
-					FILE: _filt_annotations.coco.json
+	SUBFOLDER: LD  
+		SUBFOLDER: COCO  
+			SUBFOLDER: test  
+				SUBFOLDER: 640  
+					FILES: [images].jpg (15)  
+					FILE: _annotations.coco.json  
+					FILE: _filt_annotations.coco.json  
 				SUBFOLDER: 1024
 					FILES: [images].jpg (15)
 					FILE: _annotations.coco.json
