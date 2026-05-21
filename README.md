@@ -110,20 +110,20 @@ Massenburg, L. N., Madugula, S. S., Brown, S. R., Bible, A. N., Zhang, L., Parke
 DATA & FILE OVERVIEW
 
 1. File List: 
-
+```
 FOLDER: Datasets
-	SUBFOLDER: LD  
-		SUBFOLDER: COCO  
-			SUBFOLDER: test  
-				SUBFOLDER: 640  
-					FILES: [images].jpg (15)  
-					FILE: _annotations.coco.json  
-					FILE: _filt_annotations.coco.json  
+	SUBFOLDER: LD
+		SUBFOLDER: COCO
+			SUBFOLDER: test
+				SUBFOLDER: 640
+					FILES: [images].jpg (15)
+					FILE: _annotations.coco.json
+					FILE: _filt_annotations.coco.json
 				SUBFOLDER: 1024
 					FILES: [images].jpg (15)
 					FILE: _annotations.coco.json
 					FILE: _filt_annotations.coco.json
-				SUBFOLDER: 2048				
+				SUBFOLDER: 2048
 					FILES: [images].jpg (15)
 					FILE: _annotations.coco.json
 				SUBFOLDER: 4096
@@ -210,7 +210,7 @@ FILE: example_top_model_table.csv
 FILE: top_model_decision_tree.ipynb
 	
 FILE: top_model_table.csv
-
+```
 
 2. Relationship between files: 
 Cryogenic electron miroscopy images of Pantoea sp. YR343 bacteria in [images]. Raw images (.jpeg files) and annotated (YOLO text and COCO json files) images. Instances listed in this file are model segmentation predictions per class. Folders named "drop", "root" and "seed" build the Top Model Decision Tree framework. The "misc" folder provides example model training routines for Detectron2 and SAM3 for custom datasets. 
