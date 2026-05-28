@@ -54,6 +54,7 @@ This framework presented in Constellation and GitHub is not limited to only bact
 __________________________________________________________________________________________
 
 
+
 This readme file repository update was generated on 2025-05-21 by Lynnicia Massenburg
 
 
@@ -110,6 +111,7 @@ Massenburg, L. N., Madugula, S. S., Brown, S. R., Bible, A. N., Zhang, L., Parke
 DATA & FILE OVERVIEW
 
 1. File List: 
+
 ```
 FOLDER: Datasets
 	SUBFOLDER: LD
@@ -123,7 +125,7 @@ FOLDER: Datasets
 					FILES: [images].jpg (15)
 					FILE: _annotations.coco.json
 					FILE: _filt_annotations.coco.json
-				SUBFOLDER: 2048
+				SUBFOLDER: 2048				
 					FILES: [images].jpg (15)
 					FILE: _annotations.coco.json
 				SUBFOLDER: 4096
@@ -200,6 +202,26 @@ FOLDER: seed
 	SUBFOLDER: __pycache__
 	SUBFOLDER: models
 		FILE: model_repo.ipynb
+		FILE: 640-YOLOv11-LD
+		FILE: 640-YOLOv11-ULD
+		FILE: 1024-YOLOv11-LD
+		FILE: 1024-YOLOv11-ULD
+		FILE: 640-YOLO26-LD
+		FILE: 640-YOLO26-ULD
+		FILE: 1024-YOLO26-LD
+		FILE: 1024-YOLO26-ULD
+		FILE: 640-U-Net-LD
+		FILE: 640-U-Net-ULD
+		FILE: 1024-U-Net-LD
+		FILE: 1024-U-Net-ULD		
+		FILE: 640-Detectron2-LD
+		FILE: 640-Detectron2-ULD
+		FILE: 1024-Detectron2-LD
+		FILE: 1024-Detectron2-ULD
+		FILE: 640-SAM3-LD
+		FILE: 640-SAM3-ULD
+		FILE: 1024-SAM3-LD
+		FILE: 1024-SAM3-ULD
 	FILE: __init__.py
 	FILE: LD_models.py
 	FILE: model_arch.ipynb
