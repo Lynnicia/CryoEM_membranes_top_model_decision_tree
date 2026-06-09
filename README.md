@@ -51,6 +51,23 @@ Example .csv output from the Top Model Decision Tree based on example LD and ULD
 ### Future Outlook
 This framework presented in Constellation and GitHub is not limited to only bacterial membrane segmentation. Please feel free to restructure the model architectures to adapt to your fine-tuned pre-trained model checkpoints to custom datasets. 
 
+### Reference
+Please cite this Biorxiv paper in association with this dataset, the Bibtex for the associated paper is below:
+
+```
+@article {Massenburg2026.06.05.730486,
+	author = {Massenburg, Lynnicia N. and Madugula, Sita S. and Brown, Spenser R. and Bible, Amber N. and Harris, Chanda R. and Zhang, Lance X. and Parker, Kiara and Retterer, Scott T. and Morrell-Falvey, Jennifer L. and Vasudevan, Rama K. and Williams, Alexis N.},
+	title = {Top Model Decision Tree: Selecting Segmentation Models for Reliable Quantitative Analysis in Low- and Ultralow-Dose CryoEM},
+	elocation-id = {2026.06.05.730486},
+	year = {2026},
+	doi = {10.64898/2026.06.05.730486},
+	publisher = {Cold Spring Harbor Laboratory},
+	abstract = {Deep learning neural networks provide a powerful approach for segmenting low-contrast cryogenic electron microscopy (cryoEM) images. However, model performance can vary significantly across imaging conditions and may hinder downstream quantitative analyses. Here, we present a structured evaluation workflow to systematically screen segmentation models based on performance, inference speed, robustness across imaging conditions, and reliability of downstream quantitative measurements. Using the Bacterial Cell Envelope Thickness Tool (BCET) as a test case, we evaluate multiple architectures (YOLOv11, YOLO26, U-Net, Detectron2, and SAM3) under low-dose and ultralow-dose cryoEM conditions. While several models achieve high metrics, model choice strongly influences downstream measurements of envelope thickness. Models optimized for high F1-scores may produce unreliable segmentation masks from object crowding, interpolation artifacts or imaging conditions. Our results reveal distinct trade-offs between performance, speed, and robustness amongst models. YOLOv11 provides the highest fidelity membrane segmentation for quantitative measurements and the Meta-based model SAM3 offers improved robustness under ultralow-dose conditions with competitive inference performance. This work provides practical guidance for model selection in cryoEM workflows, emphasizing that optimal choice depends on experimental priorities and downstream analysis requirements rather than metrics alone. These findings are broadly relevant to cryoEM workflows as AI-based analysis expands beyond the biological sciences.Competing Interest StatementThe authors have declared no competing interest.U.S. Department of Energy, Office of Science, https://ror.org/00mmn6b08, FWP ERKCZ64UT-Battelle, LLC, https://ror.org/04nza6677, DE-AC05- 00OR22725Oak Ridge National Laboratory, https://ror.org/01qz5mb56},
+	URL = {https://www.biorxiv.org/content/early/2026/06/06/2026.06.05.730486},
+	eprint = {https://www.biorxiv.org/content/early/2026/06/06/2026.06.05.730486.full.pdf},
+	journal = {bioRxiv}
+}
+```
 __________________________________________________________________________________________
 
 
